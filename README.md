@@ -1,6 +1,6 @@
 
 
-# 🚀 Kaizen – Student Productivity & Skill Tracker
+# ⚡️ Kaizen – Student Productivity & Skill Tracker
 
 **Kaizen** is a modern frontend dashboard designed to help students continuously improve by tracking their **DSA progress, development projects, daily habits, and semester goals** — all in one clean, visual interface.
 
