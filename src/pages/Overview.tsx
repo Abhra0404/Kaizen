@@ -10,7 +10,7 @@ export default function Overview() {
   return (
     <>
       <div style={{ marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '8px' }}>Welcome back, Alex</h2>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '8px' }}>Welcome back, Abhra</h2>
         <p style={{ color: '#6b7280', margin: 0 }}>Here's what's happening with your progress today</p>
       </div>
 
