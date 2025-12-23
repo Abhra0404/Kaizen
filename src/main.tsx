@@ -1,9 +1,11 @@
 import { StrictMode } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+// import { BrowserRouter } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import ErrorBoundary from './ErrorBoundary';
+import { HashRouter } from "react-router-dom";
+
 
 console.log('main.tsx loaded');
 
@@ -13,11 +15,11 @@ try {
   
   createRoot(rootElement!).render(
     <StrictMode>
-      <BrowserRouter>
+      <HashRouter>
         <ErrorBoundary>
           <App />
         </ErrorBoundary>
-      </BrowserRouter>
+      </HashRouter>
     </StrictMode>
   );
   console.log('App rendered successfully');
