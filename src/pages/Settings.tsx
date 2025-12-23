@@ -22,9 +22,9 @@ export default function Settings() {
       title: 'Account Settings',
       icon: User,
       items: [
-        { label: 'Email', value: 'alex.chen@email.com', editable: true },
-        { label: 'Username', value: 'alexchen', editable: true },
-        { label: 'Full Name', value: 'Alex Chen', editable: true },
+        { label: 'Email', value: 'abhra.j04@gmail.com', editable: true },
+        { label: 'Username', value: 'abhra0404', editable: true },
+        { label: 'Full Name', value: 'Abhra', editable: true },
       ],
     },
     {

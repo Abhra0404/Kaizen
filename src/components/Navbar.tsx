@@ -67,7 +67,7 @@ export default function Navbar() {
           borderLeft: '1px solid #e5e7eb'
         }}>
           <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>Alex Chen</p>
+            <p style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>Abhra</p>
             <p style={{ fontSize: '12px', color: '#6b7280' }}>Student</p>
           </div>
           <div style={{
