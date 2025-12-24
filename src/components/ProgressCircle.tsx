@@ -4,17 +4,17 @@ export default function ProgressCircle() {
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-      <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '24px', margin: 0 }}>Goals Completion</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors hover:shadow-lg duration-300">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Goals Completion</h3>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ position: 'relative', width: '192px', height: '192px' }}>
-          <svg style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+      <div className="flex flex-col items-center justify-center">
+        <div className="relative w-48 h-48">
+          <svg className="w-full h-full -rotate-90">
             <circle
               cx="96"
               cy="96"
               r="70"
-              stroke="#f3f4f6"
+              className="stroke-gray-100 dark:stroke-gray-700 transition-colors"
               strokeWidth="16"
               fill="none"
             />
@@ -37,20 +37,20 @@ export default function ProgressCircle() {
               </linearGradient>
             </defs>
           </svg>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: '32px', fontWeight: 'bold', color: '#111827' }}>{percentage}%</span>
-            <span style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>Complete</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-3xl font-bold text-gray-900 dark:text-white">{percentage}%</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400 mt-1">Complete</span>
           </div>
         </div>
 
-        <div style={{ marginTop: '24px', width: '100%' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '14px', color: '#4b5563' }}>Active Goals</span>
-            <span style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>8 / 11</span>
+        <div className="mt-6 w-full">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Active Goals</span>
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">8 / 11</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', color: '#4b5563' }}>This Month</span>
-            <span style={{ fontSize: '14px', fontWeight: '600', color: '#10b981' }}>+12%</span>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600 dark:text-gray-400">This Month</span>
+            <span className="text-sm font-semibold text-green-500">+12%</span>
           </div>
         </div>
       </div>

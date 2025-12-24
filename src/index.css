@@ -1,8 +1,9 @@
-/* Minimal global styles to avoid Tailwind v4 directive issues */
-/* If you want Tailwind later, replace with: @import "tailwindcss"; */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-	color-scheme: light;
+	color-scheme: light dark;
 }
 
 html, body, #root {
@@ -14,4 +15,9 @@ body {
 	font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
 	background: #f3f4f6;
 	color: #111827;
+}
+
+html.dark body {
+	background: #111827;
+	color: #f9fafb;
 }

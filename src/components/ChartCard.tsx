@@ -14,22 +14,22 @@ export default function ChartCard() {
   const maxValue = Math.max(...data.map(d => d.value));
 
   return (
-    <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', margin: 0 }}>Weekly Activity</h3>
-        <button style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', fontSize: '14px', color: '#4b5563', backgroundColor: '#f3f4f6', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors hover:shadow-lg duration-300">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Weekly Activity</h3>
+        <button className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 border-none transition-colors">
           Last 7 days
           <ChevronDown size={16} />
         </button>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px', height: '256px' }}>
+      <div className="flex items-end justify-between gap-4 h-64">
         {data.map((item, index) => (
-          <div key={index} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '100%', backgroundColor: '#f3f4f6', borderTopLeftRadius: '8px', borderTopRightRadius: '8px', position: 'relative', height: '100%' }}>
-              <div style={{ width: '100%', background: 'linear-gradient(to top, #3b82f6, #60a5fa)', borderTopLeftRadius: '8px', borderTopRightRadius: '8px', position: 'absolute', bottom: 0, height: `${(item.value / maxValue) * 100}%` }}></div>
+          <div key={index} className="flex-1 flex flex-col items-center gap-3">
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t-lg relative h-full transition-colors">
+              <div className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg absolute bottom-0" style={{ height: `${(item.value / maxValue) * 100}%` }}></div>
             </div>
-            <span style={{ fontSize: '12px', fontWeight: '500', color: '#6b7280' }}>{item.day}</span>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{item.day}</span>
           </div>
         ))}
       </div>

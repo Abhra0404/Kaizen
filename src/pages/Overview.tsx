@@ -9,12 +9,12 @@ import { Code2, CheckCircle, Target, FolderKanban } from 'lucide-react';
 export default function Overview() {
   return (
     <>
-      <div style={{ marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '8px' }}>Welcome back, Abhra</h2>
-        <p style={{ color: '#6b7280', margin: 0 }}>Here's what's happening with your progress today</p>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome back, Abhra</h2>
+        <p className="text-gray-600 dark:text-gray-400">Here's what's happening with your progress today</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '24px', marginBottom: '32px' }}>
+      <div className="grid grid-cols-4 gap-6 mb-8">
         <MetricCard
           icon={Code2}
           value="290"
@@ -45,8 +45,8 @@ export default function Overview() {
         />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '24px', marginBottom: '32px' }}>
-        <div style={{ gridColumn: 'span 2' }}>
+      <div className="grid grid-cols-3 gap-6 mb-8">
+        <div className="col-span-2">
           <ChartCard />
         </div>
         <div>
@@ -54,7 +54,7 @@ export default function Overview() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '24px' }}>
+      <div className="grid grid-cols-3 gap-6">
         <div>
           <WeeklyProgress />
         </div>

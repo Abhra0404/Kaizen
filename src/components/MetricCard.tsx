@@ -10,31 +10,18 @@ interface MetricCardProps {
 
 export default function MetricCard({ icon: Icon, value, label, iconBgColor, iconColor }: MetricCardProps) {
   return (
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: '24px',
-      boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-      border: '1px solid #f3f4f6'
-    }}>
-      <div style={{
-        width: '48px',
-        height: '48px',
-        backgroundColor: iconBgColor.includes('blue') ? '#eff6ff' : 
-                         iconBgColor.includes('green') ? '#f0fdf4' :
-                         iconBgColor.includes('orange') ? '#fff7ed' : '#f0fdfa',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: '16px'
-      }}>
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300 group">
+      <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform ${
+        iconBgColor.includes('blue') ? 'bg-blue-100 dark:bg-blue-900/40' : 
+        iconBgColor.includes('green') ? 'bg-green-100 dark:bg-green-900/40' :
+        iconBgColor.includes('orange') ? 'bg-orange-100 dark:bg-orange-900/40' : 'bg-teal-100 dark:bg-teal-900/40'
+      }`}>
         <Icon size={24} color={iconColor.includes('blue') ? '#3b82f6' :
                                iconColor.includes('green') ? '#10b981' :
                                iconColor.includes('orange') ? '#f97316' : '#14b8a6'} />
       </div>
-      <h3 style={{ fontSize: '30px', fontWeight: 'bold', color: '#111827', marginBottom: '4px', margin: '0 0 4px 0' }}>{value}</h3>
-      <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>{label}</p>
+      <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">{value}</h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400">{label}</p>
     </div>
   );
 }

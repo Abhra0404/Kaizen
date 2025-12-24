@@ -1,4 +1,4 @@
-import { LayoutDashboard, Code2, CheckCircle, FolderKanban, Target, Settings } from 'lucide-react';
+import { LayoutDashboard, Code2, CheckCircle, FolderKanban, Target, Settings, Zap } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const navItems = [
@@ -12,41 +12,31 @@ const navItems = [
 
 export default function Sidebar() {
   return (
-    <aside style={{
-      width: '256px',
-      backgroundColor: 'white',
-      borderRight: '1px solid #e5e7eb',
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      <div style={{ padding: '24px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827' }}>Kaizen</h1>
-        <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Continuous Growth</p>
+    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen flex flex-col transition-colors">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+            <Zap size={20} color="white" fill="white" />
+          </div>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">Kaizen</h1>
+        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-500 ml-10 font-medium">Continuous Growth</p>
       </div>
 
-      <nav style={{ flex: 1, padding: '12px' }}>
+      <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
             <NavLink
               key={item.label}
               to={item.to}
-              style={({ isActive }) => ({
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                marginBottom: '4px',
-                textDecoration: 'none',
-                backgroundColor: isActive ? '#eff6ff' : 'transparent',
-                color: isActive ? '#2563eb' : '#4b5563',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: 500
-              })}
+              className={({ isActive }) =>
+                `w-full flex items-center gap-3 px-4 py-2.5 rounded-lg no-underline transition-all duration-200 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                } font-medium text-sm`
+              }
             >
               <Icon size={20} />
               <span>{item.label}</span>
@@ -55,15 +45,14 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div style={{
-        padding: '16px',
-        margin: '12px',
-        background: 'linear-gradient(to bottom right, #eff6ff, #f0fdf4)',
-        borderRadius: '8px',
-        border: '1px solid #dbeafe'
-      }}>
-        <p style={{ fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>Track Your Progress</p>
-        <p style={{ fontSize: '12px', color: '#6b7280' }}>Stay consistent and achieve your goals</p>
+      <div className="p-4 m-4 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-orange-900/20 dark:via-orange-900/10 dark:to-rose-900/20 rounded-xl border border-orange-200 dark:border-orange-800/50 transition-colors shadow-sm">
+        <div className="flex items-start gap-2 mb-2">
+          <div className="text-lg">🎯</div>
+          <div>
+            <p className="text-sm font-bold text-gray-800 dark:text-gray-200">Quick Tip</p>
+          </div>
+        </div>
+        <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">Stay consistent and achieve your goals with daily progress tracking</p>
       </div>
     </aside>
   );

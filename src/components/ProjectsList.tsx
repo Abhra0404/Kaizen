@@ -7,24 +7,24 @@ export default function ProjectsList() {
   ];
 
   return (
-    <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', margin: 0 }}>Active Projects</h3>
-        <button style={{ fontSize: '14px', color: '#2563eb', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', fontWeight: '500' }}>View All</button>
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors hover:shadow-lg duration-300">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Active Projects</h3>
+        <button className="text-sm text-blue-600 dark:text-blue-400 bg-transparent border-none cursor-pointer font-medium hover:text-blue-700 dark:hover:text-blue-300">View All</button>
       </div>
 
       <div>
         {projects.map((project, index) => (
-          <div key={index} style={{ paddingBottom: '16px', borderBottom: index < projects.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <div key={index} className={`pb-4 ${index < projects.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''}`}>
+            <div className="flex items-center justify-between mb-2">
               <div>
-                <h4 style={{ fontSize: '14px', fontWeight: '500', color: '#111827', margin: 0 }}>{project.name}</h4>
-                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px', margin: '4px 0 0 0' }}>{project.status}</p>
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white">{project.name}</h4>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{project.status}</p>
               </div>
-              <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>{project.progress}%</span>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{project.progress}%</span>
             </div>
-            <div style={{ width: '100%', backgroundColor: '#e5e7eb', borderRadius: '9999px', height: '8px' }}>
-              <div style={{ backgroundColor: project.color, height: '8px', borderRadius: '9999px', width: `${project.progress}%`, transition: 'all 0.3s' }}></div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div className="h-2 rounded-full transition-all" style={{ backgroundColor: project.color, width: `${project.progress}%` }}></div>
             </div>
           </div>
         ))}

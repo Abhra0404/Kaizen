@@ -10,14 +10,14 @@ import Settings from './pages/Settings';
 
 function App() {
   return (
-    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f9fafb' }}>
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Sidebar />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: '32px' }}>
-          <div style={{ maxWidth: '80rem', marginLeft: 'auto', marginRight: 'auto' }}>
+        <main className="flex-1 overflow-y-auto p-8">
+          <div className="max-w-7xl mx-auto">
             <Routes>
               <Route path="/" element={<Overview />} />
               <Route path="/dsa" element={<DSA />} />
