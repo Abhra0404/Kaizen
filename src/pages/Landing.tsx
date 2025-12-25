@@ -203,7 +203,6 @@ export default function Landing({ mode }: LandingProps) {
         .animate-shimmer {
           position: relative;
           display: inline-block;
-          overflow: hidden;
         }
         
         .animate-shimmer::before {

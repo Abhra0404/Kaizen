@@ -33,8 +33,11 @@ function App() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
 
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 overflow-y-auto p-8 relative">
+          {/* Background Grid Pattern */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.05] pointer-events-none"></div>
+          
+          <div className="max-w-7xl mx-auto relative z-10">
             <Routes>
               <Route path="/dashboard" element={<Overview />} />
               <Route path="/dsa" element={<DSA />} />
