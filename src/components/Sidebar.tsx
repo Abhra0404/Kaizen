@@ -12,18 +12,20 @@ const navItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen flex flex-col transition-colors">
+    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen flex flex-col">
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
-            <Zap size={20} color="white" fill="white" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-gradient-to-br from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 rounded-lg flex items-center justify-center shadow-sm">
+            <Zap size={18} className="text-white dark:text-gray-900" fill="currentColor" />
           </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">Kaizen</h1>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Kaizen</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Productivity Suite</p>
+          </div>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-500 ml-10 font-medium">Continuous Growth</p>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -31,28 +33,28 @@ export default function Sidebar() {
               key={item.label}
               to={item.to}
               className={({ isActive }) =>
-                `w-full flex items-center gap-3 px-4 py-2.5 rounded-lg no-underline transition-all duration-200 ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg no-underline transition-all duration-200 ${
                   isActive
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50'
-                } font-medium text-sm`
+                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white'
+                } font-medium text-sm group`
               }
             >
-              <Icon size={20} />
+              <Icon size={18} strokeWidth={2} />
               <span>{item.label}</span>
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="p-4 m-4 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-orange-900/20 dark:via-orange-900/10 dark:to-rose-900/20 rounded-xl border border-orange-200 dark:border-orange-800/50 transition-colors shadow-sm">
+      <div className="p-4 m-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="flex items-start gap-2 mb-2">
-          <div className="text-lg">🎯</div>
+          <span className="text-lg">💡</span>
           <div>
-            <p className="text-sm font-bold text-gray-800 dark:text-gray-200">Quick Tip</p>
+            <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 mb-1">Pro Tip</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Track daily progress to maintain momentum</p>
           </div>
         </div>
-        <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">Stay consistent and achieve your goals with daily progress tracking</p>
       </div>
     </aside>
   );

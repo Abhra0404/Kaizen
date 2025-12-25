@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
-import { LogIn, UserPlus, CheckCircle2, TrendingUp, Target, Calendar, Code, Kanban, ArrowRight, Zap } from 'lucide-react';
+import { LogIn, UserPlus, CheckCircle2, TrendingUp, Target, Calendar, Code, Kanban, ArrowRight, Zap, Moon, Sun } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
 type LandingProps = {
@@ -9,7 +9,28 @@ type LandingProps = {
 
 export default function Landing({ mode }: LandingProps) {
   const [scrolled, setScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') === 'dark' || document.documentElement.classList.contains('dark');
+    }
+    return false;
+  });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -63,6 +84,13 @@ export default function Landing({ mode }: LandingProps) {
             <span className="text-lg font-bold tracking-tight group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">Kaizen</span>
           </Link>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg transition-all duration-200"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
             <Link 
               to="/login"
               className="text-sm font-medium px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg transition-all duration-200"
@@ -80,23 +108,51 @@ export default function Landing({ mode }: LandingProps) {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-24 px-6">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          <div className="space-y-4">
+      <section className="h-screen flex items-center justify-center px-6 overflow-hidden relative">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Gradient Orbs */}
+          <div className="absolute top-1/4 -left-20 w-72 h-72 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 rounded-full blur-3xl opacity-20 animate-float"></div>
+          <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-full blur-3xl opacity-20 animate-float-delayed"></div>
+          
+          {/* Grid Pattern */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-[0.05] dark:opacity-[0.08]"></div>
+        </div>
+
+        <div className="max-w-4xl mx-auto text-center space-y-8 relative z-10">
+          <div className="space-y-4 relative">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
-              Build better habits.<br />Track real progress.
+              <div className={`transition-all duration-1000 ease-out ${
+                isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-20'
+              }`}>
+                <span className="inline-block animate-shimmer">
+                  Build better habits.
+                </span>
+              </div>
+              <div className={`transition-all duration-1000 delay-300 ease-out ${
+                isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-20'
+              }`}>
+                <span className="inline-block animate-shimmer">
+                  Track real progress.
+                </span>
+              </div>
             </h1>
-            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
+            <p className={`text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed transition-all duration-1000 delay-500 ease-out ${
+              isVisible ? 'opacity-100' : 'opacity-0'
+            }`}>
               Kaizen is a minimalist productivity dashboard for students to track learning, habits, projects, and goals — all in one place.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+          <div className={`flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 transition-all duration-1000 delay-700 ease-out ${
+            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+          }`}>
             <Link
               to="/signup"
-              className="px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+              className="px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors relative overflow-hidden group"
             >
-              Get Started
+              <span className="relative z-10">Get Started</span>
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
             </Link>
             <Link
               to="/login"
@@ -112,9 +168,97 @@ export default function Landing({ mode }: LandingProps) {
             </Link>
           </div>
         </div>
-
-
       </section>
+      
+      <style>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px) translateX(0px);
+          }
+          50% {
+            transform: translateY(-20px) translateX(10px);
+          }
+        }
+        
+        @keyframes pulse-slow {
+          0%, 100% {
+            opacity: 0.3;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.8;
+            transform: scale(1.5);
+          }
+        }
+        
+        .animate-shimmer {
+          position: relative;
+          display: inline-block;
+          overflow: hidden;
+        }
+        
+        .animate-shimmer::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.4) 50%,
+            transparent 100%
+          );
+          animation: shimmer 3s ease-in-out infinite;
+          pointer-events: none;
+        }
+        
+        .dark .animate-shimmer::before {
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.08) 50%,
+            transparent 100%
+          );
+        }
+        
+        .animate-float {
+          animation: float 8s ease-in-out infinite;
+        }
+        
+        .animate-float-delayed {
+          animation: float 8s ease-in-out infinite 4s;
+        }
+        
+        .animate-pulse-slow {
+          animation: pulse-slow 4s ease-in-out infinite;
+        }
+        
+        .delay-1000 {
+          animation-delay: 1s;
+        }
+        
+        .delay-2000 {
+          animation-delay: 2s;
+        }
+        
+        .bg-grid-pattern {
+          background-image: 
+            linear-gradient(to right, currentColor 1px, transparent 1px),
+            linear-gradient(to bottom, currentColor 1px, transparent 1px);
+          background-size: 40px 40px;
+        }
+      `}</style>
 
       {/* Features Section */}
       <section className="py-24 px-6 bg-gray-50 dark:bg-gray-900">

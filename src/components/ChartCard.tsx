@@ -28,10 +28,10 @@ export default function ChartCard() {
       {
         label: 'Problems',
         data: data.map(d => d.value),
-        backgroundColor: 'rgba(59, 130, 246, 0.7)',
-        borderRadius: 10,
+        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+        borderRadius: 12,
         borderSkipped: false,
-        hoverBackgroundColor: 'rgba(59, 130, 246, 0.9)',
+        hoverBackgroundColor: 'rgba(5, 150, 105, 1)',
       },
     ],
   };
@@ -65,17 +65,34 @@ export default function ChartCard() {
   } as const;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors hover:shadow-lg duration-300">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Weekly Activity</h3>
-        <button className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 border-none transition-colors">
-          Last 7 days
-          <ChevronDown size={16} />
-        </button>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Weekly Activity</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Problems solved over time</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-all">
+            7D
+          </button>
+          <button className="px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-all">
+            30D
+          </button>
+        </div>
       </div>
 
-      <div className="h-64">
+      <div className="h-72">
         <Bar data={chartData} options={options} />
+      </div>
+      
+      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">Completed</span>
+          </div>
+        </div>
+        <span className="text-xs text-gray-500 dark:text-gray-400">Total: 498 problems</span>
       </div>
     </div>
   );

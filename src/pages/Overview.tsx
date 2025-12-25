@@ -8,64 +8,58 @@ import { Code2, CheckCircle, Target, FolderKanban } from 'lucide-react';
 
 export default function Overview() {
   return (
-    <>
-      <div className="mb-10">
-        <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2">Overview</p>
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">Welcome back, Abhra</h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">Here&apos;s what&apos;s happening with your progress today</p>
-      </div>
-
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Priority Metrics</p>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Today&apos;s Summary</h2>
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Kept to four for quick scanning</p>
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome back, Abhra</h1>
+          <p className="text-gray-600 dark:text-gray-400">Here's your productivity overview</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+            Download Report
+          </button>
+          <button className="px-4 py-2 text-sm font-medium text-white bg-gray-900 dark:bg-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-all shadow-sm hover:shadow-md">
+            Create New
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-6 mb-10">
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           icon={Code2}
           value="290"
           label="Total Problems Solved"
-          iconBgColor="bg-blue-50"
-          iconColor="text-blue-500"
+          iconBgColor="bg-gray-100 dark:bg-gray-800"
+          iconColor="text-gray-700 dark:text-gray-300"
           primary
         />
         <MetricCard
           icon={CheckCircle}
           value="18"
           label="Active Habits"
-          iconBgColor="bg-green-50"
-          iconColor="text-green-500"
+          iconBgColor="bg-gray-100 dark:bg-gray-800"
+          iconColor="text-gray-700 dark:text-gray-300"
         />
         <MetricCard
           icon={Target}
           value="8"
           label="Goals In Progress"
-          iconBgColor="bg-orange-50"
-          iconColor="text-orange-500"
+          iconBgColor="bg-gray-100 dark:bg-gray-800"
+          iconColor="text-gray-700 dark:text-gray-300"
         />
         <MetricCard
           icon={FolderKanban}
           value="12"
           label="Active Projects"
-          iconBgColor="bg-teal-50"
-          iconColor="text-teal-500"
+          iconBgColor="bg-gray-100 dark:bg-gray-800"
+          iconColor="text-gray-700 dark:text-gray-300"
         />
       </div>
 
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Trends</p>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Progress Overview</h2>
-        </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Weekly activity vs. goal completion</p>
-      </div>
-
-      <div className="grid grid-cols-3 gap-6 mb-10">
+      {/* Analytics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="col-span-2">
           <ChartCard />
         </div>
@@ -74,15 +68,8 @@ export default function Overview() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Deep Dive</p>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Weekly Insights</h2>
-        </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Streaks, projects, and highlights together</p>
-      </div>
-
-      <div className="grid grid-cols-3 gap-6">
+      {/* Insights Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div>
           <WeeklyProgress />
         </div>
@@ -93,6 +80,6 @@ export default function Overview() {
           <HighlightCard />
         </div>
       </div>
-    </>
+    </div>
   );
 }
