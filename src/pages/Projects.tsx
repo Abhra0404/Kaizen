@@ -44,52 +44,57 @@ export default function Projects() {
 
   return (
     <>
-      <div style={{ marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '8px' }}>Projects</h2>
-        <p style={{ color: '#6b7280', margin: 0 }}>Manage and track all your ongoing projects</p>
+      <div className="mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Projects</h1>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">Manage and track all your ongoing projects</p>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
-        <button style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pipeline</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Active Projects</h2>
+        </div>
+        <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg border-none cursor-pointer transition-colors">
           <Plus size={18} />
           New Project
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '24px' }}>
+      <div className="grid grid-cols-2 gap-6">
         {projects.map((project) => (
-          <div key={project.id} style={{ backgroundColor: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6', transition: 'box-shadow 0.2s ease' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', margin: 0, marginBottom: '4px' }}>{project.name}</h3>
-                <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>{project.description}</p>
+          <div key={project.id} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-all hover:shadow-md">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{project.name}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{project.description}</p>
               </div>
-              <button style={{ padding: '8px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                <Trash2 size={18} color="#9ca3af" />
+              <button className="p-2 rounded-lg bg-transparent border-none cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <Trash2 size={18} className="text-gray-400 dark:text-gray-500" />
               </button>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ padding: '4px 12px', borderRadius: '9999px', fontSize: '12px', fontWeight: 600, border: '1px solid #e5e7eb', color: '#374151', backgroundColor: '#f9fafb' }}>
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700">
                   {project.status}
                 </span>
-                <span style={{ fontSize: '14px', fontWeight: 600, color: '#374151' }}>{project.progress}%</span>
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{project.progress}%</span>
               </div>
-              <div style={{ width: '100%', backgroundColor: '#e5e7eb', borderRadius: '9999px', height: '8px' }}>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div
-                  style={{ width: `${project.progress}%`, height: '8px', borderRadius: '9999px', background: 'linear-gradient(to right, #3b82f6, #2563eb)', transition: 'width 0.2s ease' }}
+                  className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all"
+                  style={{ width: `${project.progress}%` }}
                 ></div>
               </div>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <p style={{ fontSize: '12px', color: '#6b7280', margin: 0, marginBottom: '8px' }}>Team</p>
-              <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="mb-4">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">Team</p>
+              <div className="flex gap-2">
                 {project.team.map((member, idx) => (
                   <div
                     key={idx}
-                    style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px', fontWeight: 600 }}
+                    className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white text-xs font-semibold"
                   >
                     {member[0]}
                   </div>
@@ -97,9 +102,9 @@ export default function Projects() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <div className="flex flex-wrap gap-2">
               {project.tags.map((tag) => (
-                <span key={tag} style={{ padding: '4px 8px', backgroundColor: '#f3f4f6', color: '#374151', borderRadius: '6px', fontSize: '12px', fontWeight: 500 }}>
+                <span key={tag} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs font-medium">
                   {tag}
                 </span>
               ))}

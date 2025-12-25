@@ -59,51 +59,57 @@ export default function Settings() {
 
   return (
     <>
-      <div style={{ marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '8px' }}>Settings</h2>
-        <p style={{ color: '#6b7280', margin: 0 }}>Manage your account and preferences</p>
+      <div className="mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">Manage your account and preferences</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '48rem' }}>
+      <div className="flex flex-col gap-6 max-w-3xl">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">Profile & Controls</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Update information and safeguards</p>
+        </div>
         {settingSections.map((section, idx) => {
           const Icon = section.icon;
           return (
-            <div key={idx} style={{ backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-              <div style={{ padding: '16px 24px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Icon size={20} />
-                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', margin: 0 }}>{section.title}</h3>
+            <div key={idx} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+              <div className="p-4 px-6 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
+                <Icon size={20} className="text-gray-700 dark:text-gray-300" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{section.title}</h3>
               </div>
 
-              <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div className="p-6 flex flex-col gap-6">
                 {section.items.map((item, itemIdx) => (
-                  <div key={itemIdx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '24px', borderBottom: itemIdx === section.items.length - 1 ? '0' : '1px solid #f3f4f6' }}>
+                  <div key={itemIdx} className={`flex items-center justify-between pb-6 ${
+                    itemIdx === section.items.length - 1 ? '' : 'border-b border-gray-100 dark:border-gray-700'
+                  }`}>
                     <div>
-                      <p style={{ fontSize: '14px', color: '#6b7280', margin: 0, marginBottom: '4px' }}>{item.label}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{item.label}</p>
                       {item.link ? (
-                        <button style={{ fontSize: '14px', color: '#3b82f6', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 500 }}>
+                        <button className="text-sm text-blue-500 hover:text-blue-600 bg-transparent border-none p-0 cursor-pointer font-medium">
                           {item.value}
                         </button>
                       ) : item.editable || item.select ? (
-                        <p style={{ fontSize: '14px', color: '#111827', fontWeight: 500, margin: 0 }}>{item.value}</p>
+                        <p className="text-sm text-gray-900 dark:text-white font-medium">{item.value}</p>
                       ) : (
-                        <p style={{ fontSize: '14px', color: '#111827', fontWeight: 500, margin: 0 }}>{item.value}</p>
+                        <p className="text-sm text-gray-900 dark:text-white font-medium">{item.value}</p>
                       )}
                     </div>
 
                     {item.toggle && (
-                      <button style={{ position: 'relative', display: 'inline-flex', height: '24px', width: '44px', alignItems: 'center', borderRadius: '9999px', backgroundColor: '#10b981', border: 'none', cursor: 'pointer' }}>
-                        <span style={{ display: 'inline-block', height: '16px', width: '16px', borderRadius: '9999px', backgroundColor: 'white', marginLeft: '4px' }}></span>
+                      <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-green-500 dark:bg-green-600 border-none cursor-pointer transition-colors">
+                        <span className="inline-block h-4 w-4 rounded-full bg-white ml-1"></span>
                       </button>
                     )}
 
                     {item.editable && (
-                      <button style={{ fontSize: '14px', color: '#3b82f6', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 500 }}>
+                      <button className="text-sm text-blue-500 hover:text-blue-600 bg-transparent border-none cursor-pointer font-medium">
                         Edit
                       </button>
                     )}
 
                     {item.select && (
-                      <select style={{ fontSize: '14px', color: '#374151', background: 'transparent', cursor: 'pointer', fontWeight: 500, border: '1px solid #e5e7eb', borderRadius: '6px', padding: '4px 8px' }}>
+                      <select className="text-sm text-gray-700 dark:text-gray-300 bg-transparent cursor-pointer font-medium border border-gray-200 dark:border-gray-600 rounded-md px-2 py-1 dark:bg-gray-700">
                         <option>{item.value}</option>
                       </select>
                     )}
@@ -114,10 +120,10 @@ export default function Settings() {
           );
         })}
 
-        <div style={{ backgroundColor: '#fef2f2', borderRadius: '12px', border: '1px solid #fecaca', padding: '24px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#7f1d1d', margin: 0, marginBottom: '8px' }}>Danger Zone</h3>
-          <p style={{ fontSize: '14px', color: '#b91c1c', margin: 0, marginBottom: '16px' }}>Once you delete your account, there is no going back. Please be certain.</p>
-          <button style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: '#dc2626', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>
+        <div className="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 p-6 transition-colors">
+          <h3 className="text-lg font-semibold text-red-900 dark:text-red-400 mb-2">Danger Zone</h3>
+          <p className="text-sm text-red-700 dark:text-red-300 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+          <button className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg border-none cursor-pointer transition-colors">
             <LogOut size={18} />
             Delete Account
           </button>

@@ -1,4 +1,15 @@
 import { ChevronDown } from 'lucide-react';
+import {
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 export default function ChartCard() {
   const data = [
@@ -11,7 +22,47 @@ export default function ChartCard() {
     { day: 'Sun', value: 72 },
   ];
 
-  const maxValue = Math.max(...data.map(d => d.value));
+  const chartData = {
+    labels: data.map(d => d.day),
+    datasets: [
+      {
+        label: 'Problems',
+        data: data.map(d => d.value),
+        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+        borderRadius: 10,
+        borderSkipped: false,
+        hoverBackgroundColor: 'rgba(59, 130, 246, 0.9)',
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => `${ctx.parsed.y} problems`,
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: {
+          color: '#6b7280',
+        },
+      },
+      y: {
+        grid: { color: 'rgba(107,114,128,0.15)' },
+        ticks: {
+          color: '#6b7280',
+          precision: 0,
+        },
+      },
+    },
+  } as const;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors hover:shadow-lg duration-300">
@@ -23,15 +74,8 @@ export default function ChartCard() {
         </button>
       </div>
 
-      <div className="flex items-end justify-between gap-4 h-64">
-        {data.map((item, index) => (
-          <div key={index} className="flex-1 flex flex-col items-center gap-3">
-            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t-lg relative h-full transition-colors">
-              <div className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg absolute bottom-0" style={{ height: `${(item.value / maxValue) * 100}%` }}></div>
-            </div>
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{item.day}</span>
-          </div>
-        ))}
+      <div className="h-64">
+        <Bar data={chartData} options={options} />
       </div>
     </div>
   );

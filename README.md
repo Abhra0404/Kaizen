@@ -92,15 +92,6 @@ src/
 
 ---
 
-## 🙌 Author
+> Stay focused, stay productive, and keep leveling up! — kaizenX out. ✌️
 
-### Abhra Jaiswal
-*(Frontend Developer | React | UI/UX Enthusiast)*
-
----
-
-## 🏁 Philosophy
-
-> *Small improvements every day lead to remarkable results.*
-> — **Kaizen**
 

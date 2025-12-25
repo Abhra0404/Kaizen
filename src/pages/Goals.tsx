@@ -51,86 +51,99 @@ export default function Goals() {
 
   return (
     <>
-      <div style={{ marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '8px' }}>Goals</h2>
-        <p style={{ color: '#6b7280', margin: 0 }}>Set and achieve meaningful learning goals</p>
+      <div className="mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Goals</h1>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">Set and achieve meaningful learning goals</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '24px', marginBottom: '32px' }}>
-        <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-          <p style={{ color: '#6b7280', fontSize: '14px', margin: 0, marginBottom: '4px' }}>Total Goals</p>
-          <p style={{ fontSize: '30px', fontWeight: 700, color: '#111827', margin: 0 }}>8</p>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">Goal Snapshot</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Where you stand now</p>
+      </div>
+
+      <div className="grid grid-cols-4 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Goals</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white">8</p>
         </div>
-        <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-          <p style={{ color: '#6b7280', fontSize: '14px', margin: 0, marginBottom: '4px' }}>In Progress</p>
-          <p style={{ fontSize: '30px', fontWeight: 700, color: '#111827', margin: 0 }}>4</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">In Progress</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white">4</p>
         </div>
-        <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-          <p style={{ color: '#6b7280', fontSize: '14px', margin: 0, marginBottom: '4px' }}>Completed</p>
-          <p style={{ fontSize: '30px', fontWeight: 700, color: '#16a34a', margin: 0 }}>1</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Completed</p>
+          <p className="text-3xl font-bold text-green-600 dark:text-green-400">1</p>
         </div>
-        <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-          <p style={{ color: '#6b7280', fontSize: '14px', margin: 0, marginBottom: '4px' }}>Completion Rate</p>
-          <p style={{ fontSize: '30px', fontWeight: 700, color: '#111827', margin: 0 }}>59%</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Completion Rate</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white">59%</p>
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
-        <button style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide">Planning</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Active Goals</h2>
+        </div>
+        <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg border-none cursor-pointer transition-colors">
           <Plus size={18} />
           New Goal
         </button>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="flex flex-col gap-4">
         {goals.map((goal) => (
           <div
             key={goal.id}
-            style={{
-              backgroundColor: goal.completed ? '#f0fdf4' : 'white',
-              border: `1px solid ${goal.completed ? '#bbf7d0' : '#f3f4f6'}`,
-              borderRadius: '12px',
-              padding: '24px',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-              transition: 'all 0.2s ease'
-            }}
+            className={`rounded-xl p-6 shadow-sm border transition-all ${
+              goal.completed
+                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+            }`}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-              <button style={{ marginTop: '4px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+            <div className="flex items-start gap-4">
+              <button className="mt-1 bg-transparent border-none cursor-pointer">
                 {goal.completed ? (
-                  <CheckCircle2 size={24} color="#16a34a" />
+                  <CheckCircle2 size={24} className="text-green-600 dark:text-green-400" />
                 ) : (
-                  <Circle size={24} color="#d1d5db" />
+                  <Circle size={24} className="text-gray-300 dark:text-gray-600" />
                 )}
               </button>
 
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div className="flex-1">
+                <div className="flex items-start justify-between mb-2">
                   <div>
-                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: goal.completed ? '#6b7280' : '#111827', margin: 0, textDecoration: goal.completed ? 'line-through' : 'none' }}>
+                    <h3 className={`text-lg font-semibold ${
+                      goal.completed
+                        ? 'text-gray-600 dark:text-gray-400 line-through'
+                        : 'text-gray-900 dark:text-white'
+                    }`}>
                       {goal.title}
                     </h3>
-                    <p style={{ fontSize: '14px', color: '#6b7280', margin: 0, marginTop: '4px' }}>{goal.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{goal.description}</p>
                   </div>
-                  <span style={{ padding: '4px 12px', backgroundColor: '#f3f4f6', color: '#374151', borderRadius: '9999px', fontSize: '12px', fontWeight: 600 }}>
+                  <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-semibold">
                     {goal.category}
                   </span>
                 </div>
 
-                <div style={{ marginTop: '16px', marginBottom: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 500, color: '#6b7280' }}>Progress</span>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#374151' }}>{goal.progress}%</span>
+                <div className="mt-4 mb-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Progress</span>
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{goal.progress}%</span>
                   </div>
-                  <div style={{ width: '100%', backgroundColor: '#e5e7eb', borderRadius: '9999px', height: '8px' }}>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div
-                      style={{ height: '8px', borderRadius: '9999px', transition: 'width 0.2s ease', backgroundColor: goal.completed ? '#22c55e' : '#3b82f6', width: `${goal.progress}%` }}
+                      className={`h-2 rounded-full transition-all ${
+                        goal.completed ? 'bg-green-500' : 'bg-blue-500'
+                      }`}
+                      style={{ width: `${goal.progress}%` }}
                     ></div>
                   </div>
                 </div>
 
-                <p style={{ fontSize: '12px', color: '#6b7280', margin: 0, marginTop: '12px' }}>
-                  Deadline: <span style={{ fontWeight: 600, color: '#374151' }}>{goal.deadline}</span>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-3">
+                  Deadline: <span className="font-semibold text-gray-700 dark:text-gray-300">{goal.deadline}</span>
                 </p>
               </div>
             </div>

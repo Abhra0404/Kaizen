@@ -2,7 +2,7 @@ import { LayoutDashboard, Code2, CheckCircle, FolderKanban, Target, Settings, Za
 import { NavLink } from 'react-router-dom';
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Overview', to: '/' },
+  { icon: LayoutDashboard, label: 'Overview', to: '/dashboard' },
   { icon: Code2, label: 'DSA', to: '/dsa' },
   { icon: CheckCircle, label: 'Habits', to: '/habits' },
   { icon: FolderKanban, label: 'Projects', to: '/projects' },

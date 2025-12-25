@@ -1,4 +1,16 @@
 import { TrendingUp } from 'lucide-react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
 export default function WeeklyProgress() {
   const weeklyData = [
@@ -8,41 +20,54 @@ export default function WeeklyProgress() {
     { week: 'Week 4', value: 73 },
   ];
 
+  const data = {
+    labels: weeklyData.map(d => d.week),
+    datasets: [
+      {
+        label: 'Problems solved',
+        data: weeklyData.map(d => d.value),
+        fill: true,
+        borderColor: 'rgba(59,130,246,1)',
+        backgroundColor: 'rgba(59,130,246,0.15)',
+        tension: 0.35,
+        pointRadius: 4,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: 'rgba(59,130,246,1)',
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => `${ctx.parsed.y} problems`,
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: '#6b7280' },
+      },
+      y: {
+        grid: { color: 'rgba(107,114,128,0.15)' },
+        ticks: { color: '#6b7280', precision: 0 },
+        beginAtZero: true,
+      },
+    },
+  } as const;
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors hover:shadow-lg duration-300">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">DSA Progress</h3>
 
       <div className="flex flex-col gap-6">
-        <div style={{ position: 'relative', height: '128px' }}>
-          <svg style={{ width: '100%', height: '100%' }} viewBox="0 0 400 120">
-            <defs>
-              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#3b82f6" />
-                <stop offset="100%" stopColor="#10b981" />
-              </linearGradient>
-            </defs>
-
-            <path
-              d="M 20 90 L 120 65 L 220 75 L 380 25"
-              stroke="url(#lineGradient)"
-              strokeWidth="3"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-
-            {[20, 120, 220, 380].map((x, i) => (
-              <circle
-                key={i}
-                cx={x}
-                cy={[90, 65, 75, 25][i]}
-                r="5"
-                className="fill-white dark:fill-gray-800"
-                stroke="url(#lineGradient)"
-                strokeWidth="3"
-              />
-            ))}
-          </svg>
+        <div className="h-36">
+          <Line data={data} options={options} />
         </div>
 
         <div className="grid grid-cols-4 gap-4 text-center">

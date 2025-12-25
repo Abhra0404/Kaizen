@@ -12,57 +12,68 @@ export default function Habits() {
 
   return (
     <>
-      <div style={{ marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '8px' }}>My Habits</h2>
-        <p style={{ color: '#6b7280', margin: 0 }}>Build and track consistent habits for growth</p>
+      <div className="mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">My Habits</h1>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">Build and track consistent habits for growth</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '24px', marginBottom: '32px' }}>
-        <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-          <p style={{ color: '#6b7280', fontSize: '14px', margin: 0, marginBottom: '4px' }}>Active Habits</p>
-          <p style={{ fontSize: '30px', fontWeight: 700, color: '#111827', margin: 0 }}>18</p>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">Habit Snapshot</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Daily momentum at a glance</p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Active Habits</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white">18</p>
         </div>
-        <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-          <p style={{ color: '#6b7280', fontSize: '14px', margin: 0, marginBottom: '4px' }}>Current Streak</p>
-          <p style={{ fontSize: '30px', fontWeight: 700, color: '#111827', margin: 0 }}>15 days</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Current Streak</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white">15 days</p>
         </div>
-        <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-          <p style={{ color: '#6b7280', fontSize: '14px', margin: 0, marginBottom: '4px' }}>Completion Rate</p>
-          <p style={{ fontSize: '30px', fontWeight: 700, color: '#111827', margin: 0 }}>89%</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Completion Rate</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white">89%</p>
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
-        <button style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide">Routines</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Active Habits</h2>
+        </div>
+        <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg border-none cursor-pointer transition-colors">
           <Plus size={18} />
           New Habit
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '24px' }}>
+      <div className="grid grid-cols-2 gap-6">
         {habits.map((habit) => (
-          <div key={habit.id} style={{ backgroundColor: '#eef2ff', border: '2px solid #c7d2fe', borderRadius: '12px', padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <div key={habit.id} className="bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-200 dark:border-indigo-800 rounded-xl p-6 transition-colors">
+            <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', margin: 0, marginBottom: '4px' }}>{habit.name}</h3>
-                <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>{habit.frequency}</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{habit.name}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{habit.frequency}</p>
               </div>
-              <button style={{ padding: '8px', backgroundColor: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>
-                <Check size={20} color="#9ca3af" />
+              <button className="p-2 bg-white dark:bg-gray-800 rounded-lg border-none cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <Check size={20} className="text-gray-400 dark:text-gray-500" />
               </button>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '24px', fontWeight: 700, color: '#111827' }}>{habit.streak}</span>
-              <span style={{ fontSize: '14px', color: '#6b7280' }}>day streak</span>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">{habit.streak}</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">day streak</span>
             </div>
 
-            <div style={{ marginTop: '16px', display: 'flex', gap: '4px' }}>
+            <div className="mt-4 flex gap-1">
               {[...Array(7)].map((_, i) => (
-                <div key={i} style={{ flex: 1, height: '8px', borderRadius: '9999px', backgroundColor: i < 5 ? '#22c55e' : '#d1d5db' }}></div>
+                <div key={i} className={`flex-1 h-2 rounded-full ${
+                  i < 5 ? 'bg-green-500 dark:bg-green-400' : 'bg-gray-300 dark:bg-gray-600'
+                }`}></div>
               ))}
             </div>
-            <p style={{ fontSize: '12px', color: '#6b7280', margin: 0, marginTop: '8px' }}>Last 7 days completion</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Last 7 days completion</p>
           </div>
         ))}
       </div>
