@@ -1,15 +1,29 @@
-export default function ProjectsList() {
-  const projects = [
+type ProjectItem = {
+  name: string;
+  status: string;
+  progress: number;
+  color: string;
+};
+
+type ProjectsListProps = {
+  projects?: ProjectItem[];
+  title?: string;
+};
+
+export default function ProjectsList({
+  projects = [
     { name: 'E-commerce Platform', status: 'In Progress', progress: 65, color: '#3b82f6' },
     { name: 'Mobile App Design', status: 'Review', progress: 90, color: '#10b981' },
     { name: 'API Integration', status: 'In Progress', progress: 45, color: '#3b82f6' },
     { name: 'Database Migration', status: 'Planning', progress: 20, color: '#9ca3af' },
-  ];
+  ],
+  title = 'Active Projects',
+}: ProjectsListProps) {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors hover:shadow-lg duration-300">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Active Projects</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
         <button className="text-sm text-blue-600 dark:text-blue-400 bg-transparent border-none cursor-pointer font-medium hover:text-blue-700 dark:hover:text-blue-300">View All</button>
       </div>
 

@@ -12,13 +12,26 @@ import { Line } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
-export default function WeeklyProgress() {
-  const weeklyData = [
+type WeeklyPoint = { week: string; value: number };
+
+type WeeklyProgressProps = {
+  weeklyData?: WeeklyPoint[];
+  title?: string;
+  footerSummary?: string;
+  trendLabel?: string;
+};
+
+export default function WeeklyProgress({
+  weeklyData = [
     { week: 'Week 1', value: 45 },
     { week: 'Week 2', value: 58 },
     { week: 'Week 3', value: 52 },
     { week: 'Week 4', value: 73 },
-  ];
+  ],
+  title = 'DSA Progress',
+  footerSummary = '290 problems solved',
+  trendLabel = '+28% this month',
+}: WeeklyProgressProps) {
 
   const data = {
     labels: weeklyData.map(d => d.week),
@@ -63,7 +76,7 @@ export default function WeeklyProgress() {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors hover:shadow-lg duration-300">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">DSA Progress</h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">{title}</h3>
 
       <div className="flex flex-col gap-6">
         <div className="h-36">
@@ -82,9 +95,9 @@ export default function WeeklyProgress() {
         <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
           <div className="flex items-center gap-2 text-green-500">
             <TrendingUp size={18} />
-            <span className="text-sm font-semibold">+28% this month</span>
+            <span className="text-sm font-semibold">{trendLabel}</span>
           </div>
-          <span className="text-sm text-gray-600 dark:text-gray-400">290 problems solved</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{footerSummary}</span>
         </div>
       </div>
     </div>

@@ -1,11 +1,22 @@
-export default function ProgressCircle() {
-  const percentage = 73;
+type ProgressCircleProps = {
+  percentage?: number;
+  activeSummary?: string;
+  monthDelta?: string;
+  title?: string;
+};
+
+export default function ProgressCircle({
+  percentage = 73,
+  activeSummary = '8 / 11',
+  monthDelta = '+12%',
+  title = 'Goals Completion',
+}: ProgressCircleProps) {
   const circumference = 2 * Math.PI * 70;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors hover:shadow-lg duration-300">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Goals Completion</h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">{title}</h3>
 
       <div className="flex flex-col items-center justify-center">
         <div className="relative w-48 h-48">
@@ -46,11 +57,11 @@ export default function ProgressCircle() {
         <div className="mt-6 w-full">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-gray-600 dark:text-gray-400">Active Goals</span>
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">8 / 11</span>
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">{activeSummary}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600 dark:text-gray-400">This Month</span>
-            <span className="text-sm font-semibold text-green-500">+12%</span>
+            <span className="text-sm font-semibold text-green-500">{monthDelta}</span>
           </div>
         </div>
       </div>

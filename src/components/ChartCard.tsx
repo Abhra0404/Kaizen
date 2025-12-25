@@ -11,8 +11,19 @@ import { Bar } from 'react-chartjs-2';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
-export default function ChartCard() {
-  const data = [
+type ChartPoint = { day: string; value: number };
+
+type ChartCardProps = {
+  title?: string;
+  subtitle?: string;
+  points?: ChartPoint[];
+  totalLabel?: string;
+};
+
+export default function ChartCard({
+  title = 'Weekly Activity',
+  subtitle = 'Problems solved over time',
+  points = [
     { day: 'Mon', value: 65 },
     { day: 'Tue', value: 78 },
     { day: 'Wed', value: 45 },
@@ -20,14 +31,16 @@ export default function ChartCard() {
     { day: 'Fri', value: 92 },
     { day: 'Sat', value: 58 },
     { day: 'Sun', value: 72 },
-  ];
+  ],
+  totalLabel = 'Total: 498 problems',
+}: ChartCardProps) {
 
   const chartData = {
-    labels: data.map(d => d.day),
+    labels: points.map(d => d.day),
     datasets: [
       {
         label: 'Problems',
-        data: data.map(d => d.value),
+        data: points.map(d => d.value),
         backgroundColor: 'rgba(16, 185, 129, 0.8)',
         borderRadius: 12,
         borderSkipped: false,
@@ -68,8 +81,8 @@ export default function ChartCard() {
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Weekly Activity</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Problems solved over time</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
           <button className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-all">
@@ -92,7 +105,7 @@ export default function ChartCard() {
             <span className="text-xs text-gray-600 dark:text-gray-400">Completed</span>
           </div>
         </div>
-        <span className="text-xs text-gray-500 dark:text-gray-400">Total: 498 problems</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">{totalLabel}</span>
       </div>
     </div>
   );
