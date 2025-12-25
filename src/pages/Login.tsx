@@ -25,7 +25,7 @@ export default function Login() {
       } else {
         setError('Please fill in all fields');
       }
-    } catch (err) {
+    } catch {
       setError('Login failed. Please try again.');
     } finally {
       setLoading(false);

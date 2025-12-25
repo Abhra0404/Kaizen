@@ -1,13 +1,9 @@
 import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
-import { LogIn, UserPlus, CheckCircle2, TrendingUp, Target, Calendar, Code, Kanban, ArrowRight, Zap, Moon, Sun } from 'lucide-react';
+import { CheckCircle2, Target, Code, Kanban, ArrowRight, Zap, Moon, Sun } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
-type LandingProps = {
-  mode?: 'login' | 'signup';
-};
-
-export default function Landing({ mode }: LandingProps) {
+export default function Landing() {
   const [scrolled, setScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {

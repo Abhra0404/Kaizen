@@ -38,7 +38,7 @@ export default function Signup() {
       // Store in localStorage for demo purposes
       localStorage.setItem('user', JSON.stringify({ name, email }));
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
       setError('Signup failed. Please try again.');
     } finally {
       setLoading(false);
