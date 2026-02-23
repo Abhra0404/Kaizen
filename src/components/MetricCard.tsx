@@ -7,9 +7,10 @@ interface MetricCardProps {
   iconBgColor: string;
   iconColor: string;
   primary?: boolean;
+  trend?: { value: string; direction: 'up' | 'down' | 'neutral' };
 }
 
-export default function MetricCard({ icon: Icon, value, label, iconBgColor, iconColor, primary = false }: MetricCardProps) {
+export default function MetricCard({ icon: Icon, value, label, iconBgColor, iconColor, primary = false, trend }: MetricCardProps) {
   return (
     <div className="relative bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 group">
       {/* Background decoration */}
@@ -34,10 +35,20 @@ export default function MetricCard({ icon: Icon, value, label, iconBgColor, icon
         
         {/* Trend indicator */}
         <div className="mt-4 flex items-center gap-2">
-          <div className="flex items-center text-xs font-medium text-green-600 dark:text-green-400">
-            <span>↑ 12%</span>
-          </div>
-          <span className="text-xs text-gray-500 dark:text-gray-500">vs last week</span>
+          {trend ? (
+            <>
+              <div className={`flex items-center text-xs font-medium ${
+                trend.direction === 'up' ? 'text-green-600 dark:text-green-400' :
+                trend.direction === 'down' ? 'text-red-500 dark:text-red-400' :
+                'text-gray-500 dark:text-gray-400'
+              }`}>
+                <span>{trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '—'} {trend.value}</span>
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-500">vs last week</span>
+            </>
+          ) : (
+            <span className="text-xs text-gray-400 dark:text-gray-600">No trend data</span>
+          )}
         </div>
       </div>
     </div>

@@ -82,7 +82,41 @@ export default function Overview() {
     return weeks;
   }, [problems]);
 
-  const datasets = useMemo(() => ({
+  const datasets = useMemo(() => {
+    // Week-over-week helpers (uses date field on dsa_problems)
+    const today = new Date();
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const solvedThisWeek = problems.filter(p => {
+      if (!p?.date || !p.solved) return false;
+      const diff = Math.floor((today.getTime() - new Date(p.date).getTime()) / msPerDay);
+      return diff >= 0 && diff < 7;
+    }).length;
+    const solvedLastWeek = problems.filter(p => {
+      if (!p?.date || !p.solved) return false;
+      const diff = Math.floor((today.getTime() - new Date(p.date).getTime()) / msPerDay);
+      return diff >= 7 && diff < 14;
+    }).length;
+    const dsaTrend = (() => {
+      if (solvedLastWeek === 0 && solvedThisWeek === 0) return { value: '0%', direction: 'neutral' as const };
+      if (solvedLastWeek === 0) return { value: `+${solvedThisWeek}`, direction: 'up' as const };
+      const pct = Math.round(((solvedThisWeek - solvedLastWeek) / solvedLastWeek) * 100);
+      return pct >= 0
+        ? { value: `+${pct}%`, direction: 'up' as const }
+        : { value: `${pct}%`, direction: 'down' as const };
+    })();
+    const habitsTrend = habits.length > 0
+      ? { value: `${habits.length} total`, direction: 'neutral' as const }
+      : { value: '0 total', direction: 'neutral' as const };
+    const completedGoals = goals.filter(g => g.completed).length;
+    const activeGoals = goals.filter(g => !g.completed).length;
+    const goalsTrend = completedGoals > 0
+      ? { value: `${completedGoals} done`, direction: 'up' as const }
+      : { value: `${activeGoals} open`, direction: 'neutral' as const };
+    const projectsTrend = projects.length > 0
+      ? { value: `${projects.length} tracked`, direction: 'neutral' as const }
+      : { value: '0 tracked', direction: 'neutral' as const };
+
+    return {
     real: {
       metrics: (() => {
         const solved = problems.filter((p) => p.solved).length;
@@ -90,10 +124,10 @@ export default function Overview() {
         const goalsInProgress = goals.filter((g) => !g.completed).length;
         const activeProjects = projects.length;
         return [
-          { icon: Code2, value: String(solved), label: 'Total Problems Solved' },
-          { icon: CheckCircle, value: String(activeHabits), label: 'Active Habits' },
-          { icon: Target, value: String(goalsInProgress), label: 'Goals In Progress' },
-          { icon: FolderKanban, value: String(activeProjects), label: 'Active Projects' },
+          { icon: Code2, value: String(solved), label: 'Total Problems Solved', trend: dsaTrend },
+          { icon: CheckCircle, value: String(activeHabits), label: 'Active Habits', trend: habitsTrend },
+          { icon: Target, value: String(goalsInProgress), label: 'Goals In Progress', trend: goalsTrend },
+          { icon: FolderKanban, value: String(activeProjects), label: 'Active Projects', trend: projectsTrend },
         ];
       })(),
       chart: {
@@ -135,10 +169,10 @@ export default function Overview() {
     },
     sample: {
       metrics: [
-        { icon: Code2, value: '120', label: 'Total Problems Solved' },
-        { icon: CheckCircle, value: '6', label: 'Active Habits' },
-        { icon: Target, value: '3', label: 'Goals In Progress' },
-        { icon: FolderKanban, value: '4', label: 'Active Projects' },
+        { icon: Code2, value: '120', label: 'Total Problems Solved', trend: { value: '+18%', direction: 'up' as const } },
+        { icon: CheckCircle, value: '6', label: 'Active Habits', trend: { value: '+2', direction: 'up' as const } },
+        { icon: Target, value: '3', label: 'Goals In Progress', trend: { value: '-1', direction: 'down' as const } },
+        { icon: FolderKanban, value: '4', label: 'Active Projects', trend: { value: '4 tracked', direction: 'neutral' as const } },
       ],
       chart: {
         points: [
@@ -182,7 +216,7 @@ export default function Overview() {
         ],
       },
     },
-  }), [goals, habits, problems, projects, getLast4Weeks, getLast7DaysPoints]);
+  }; }, [goals, habits, problems, projects, getLast4Weeks, getLast7DaysPoints]);
 
   const current = datasets[mode];
 
@@ -235,6 +269,7 @@ export default function Overview() {
             iconBgColor="bg-gray-100 dark:bg-gray-800"
             iconColor="text-gray-700 dark:text-gray-300"
             primary={idx === 0}
+            trend={metric.trend}
           />
         ))}
       </div>
