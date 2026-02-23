@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
+import { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Overview from './pages/Overview';
@@ -15,6 +16,7 @@ import Signup from './pages/Signup';
 function App() {
   const location = useLocation();
   const { user, loading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const isLanding = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/signup';
 
   if (loading) {
@@ -43,12 +45,20 @@ function App() {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar />
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-        <main className="flex-1 overflow-y-auto p-8 relative">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <Navbar onToggleSidebar={() => setSidebarOpen(o => !o)} />
+
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 relative">
           {/* Background Grid Pattern */}
           <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.05] pointer-events-none"></div>
           
