@@ -1,172 +1,115 @@
 
 
-# ⚡️ Kaizen – Student Productivity & Skill Tracker
+# Kaizen
 
-**Kaizen** is a modern frontend dashboard designed to help students continuously improve by tracking their **DSA progress, development projects, daily habits, and semester goals** — all in one clean, visual interface.
+> Improve 1% today. Repeat tomorrow.
 
-Inspired by the philosophy of *Kaizen* (continuous improvement), this project focuses on building better habits through data-driven insights and a smooth user experience.
+Kaizen is a minimal, growth-focused web application built around the philosophy of continuous improvement. It helps users stay consistent, focused, and intentional about daily progress.
+
+Live: [https://kaizen-phi-five.vercel.app](https://kaizen-phi-five.vercel.app)
 
 ---
 
-## ✨ Features
+## ✨ Overview
 
-* 📊 **Dashboard Overview** – Visual summary of progress, habits, and goals
-* 🧠 **DSA Tracker** – Track problems solved by difficulty and topic
-* 💻 **Project Tracker** – Manage development projects with status and tech stack tags
-* 🔁 **Habit Tracker** – Daily habits with streak tracking (gym, reading, learning, etc.)
-* 🎯 **Goals Management** – Semester goals with progress visualization
-* 🌗 **Dark / Light Mode** – Theme toggle for better accessibility
-* 📱 **Fully Responsive** – Mobile-first, works smoothly across all screen sizes
-* 🔐 **Authentication** – Secure login and signup pages
+Kaizen is designed to encourage small, repeatable improvements that compound over time.
+The interface is clean, distraction-free, and built with a focus on clarity and usability.
+
+This project reflects a simple idea:
+
+> Small actions. Daily execution. Long-term transformation.
+
+---
+
+## 🚀 Features
+
+* Minimal and modern UI
+* Clean settings interface
+* Responsive layout
+* Scalable structure for future backend integration
+* Designed for productivity-focused workflows
 
 ---
 
 ## 🛠 Tech Stack
 
-* **React 18+** – UI framework
-* **TypeScript** – Type-safe JavaScript
-* **Vite** – Lightning-fast build tool
-* **Tailwind CSS** – Utility-first CSS framework
-* **Recharts** – React charting library
-* **LocalStorage** – Client-side data persistence
+Frontend:
+
+* React
+* Modern CSS / Tailwind (if applicable — edit if needed)
+* Deployed on Vercel
+
+Future-ready for:
+
+* Authentication
+* Database integration
+* AI features
+* Analytics
+* Subscription model
 
 ---
 
-## 📂 Project Structure
+## 📦 Installation
 
-```
-src/
-├── components/
-│   ├── Navbar.tsx
-│   ├── Sidebar.tsx
-│   ├── ChartCard.tsx
-│   ├── HighlightCard.tsx
-│   ├── MetricCard.tsx
-│   ├── ProgressCircle.tsx
-│   ├── ProjectsList.tsx
-│   └── WeeklyProgress.tsx
-├── pages/
-│   ├── Landing.tsx
-│   ├── Login.tsx
-│   ├── Signup.tsx
-│   ├── Overview.tsx
-│   ├── DSA.tsx
-│   ├── Habits.tsx
-│   ├── Projects.tsx
-│   ├── Goals.tsx
-│   └── Settings.tsx
-├── contexts/
-├── assets/
-├── App.tsx
-├── ErrorBoundary.tsx
-├── index.css
-└── main.tsx
+Clone the repository:
+
+```bash
+git clone https://github.com/Abhra0404/Kaizen.git
+cd Kaizen
 ```
 
----
+Install dependencies:
 
-## 🚀 Getting Started
+```bash
+npm install
+```
 
-### Prerequisites
+Run locally:
 
-* **Node.js** (v16 or higher)
-* **npm** or **yarn**
+```bash
+npm run dev
+```
 
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/kaizen.git
-   cd kaizen
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open your browser:**
-   Navigate to `http://localhost:5173` (Vite default port)
-
-### Build for Production
+Build for production:
 
 ```bash
 npm run build
-npm run preview
 ```
 
 ---
 
-## 📋 Available Scripts
+## 🧠 Philosophy
 
-* `npm run dev` – Start development server
-* `npm run build` – Build for production
-* `npm run preview` – Preview production build
-* `npm run lint` – Run ESLint checks
+Kaizen is inspired by the principle of continuous improvement:
 
----
+* Focus on small wins
+* Stay consistent
+* Optimize gradually
+* Let compounding do the rest
 
-## 🧠 Key Learnings
-
-* Designing scalable and reusable React components with TypeScript
-* Managing complex UI state efficiently
-* Building data-driven dashboards using Recharts
-* Implementing clean UX with Tailwind CSS responsive layouts
-* Structuring a real-world frontend project with Vite
-* Error handling with Error Boundary components
-* LocalStorage for persistent client-side data management
+The goal is to build a system that supports discipline, clarity, and daily progress.
 
 ---
 
-## 🚀 Future Improvements
+## 🔮 Roadmap
 
-* Backend integration (Firebase / REST API)
-* Enhanced user authentication with JWT
-* Cloud-based data synchronization
-* Drag & drop task management
-* Advanced analytics and insights
-* PWA support for offline functionality
-* Export data to PDF/CSV
-* Social features (leaderboards, friend tracking)
-* AI-powered recommendations
+Planned enhancements:
 
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+* User authentication
+* Persistent user data
+* Progress tracking
+* AI-powered suggestions
+* Dark mode improvements
+* Analytics dashboard
+* Subscription support
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the LICENSE file for details.
-
----
-
-## 🌐 Live Demo
-
-🔗 **Deployed Link:** *(https://kaizen-phi-five.vercel.app/)*
-
----
-
-## 💬 Feedback & Support
-
-Found a bug? Have a feature request? Feel free to open an issue or reach out!
+This project is open-source and available under the MIT License.
 
 ---
 
 > Stay focused, stay productive, and keep leveling up! — kaizenX out. ✌️
-
 
