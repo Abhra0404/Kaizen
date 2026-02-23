@@ -1,9 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Zap } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,15 +17,11 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      if (email && password) {
-        // Store in localStorage for demo purposes
-        localStorage.setItem('user', JSON.stringify({ email }));
-        navigate('/dashboard');
+      const { error } = await signIn(email, password);
+      if (error) {
+        setError(error.message);
       } else {
-        setError('Please fill in all fields');
+        navigate('/dashboard');
       }
     } catch {
       setError('Login failed. Please try again.');

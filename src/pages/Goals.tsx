@@ -1,8 +1,10 @@
 import { CheckCircle2, Circle, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 type Goal = {
-  id: number;
+  id: string;
   title: string;
   description: string;
   progress: number;
@@ -11,18 +13,10 @@ type Goal = {
   completed: boolean;
 };
 
-const STORAGE_KEY = 'kaizen-goals';
-
 export default function Goals() {
-  const [goals, setGoals] = useState<Goal[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved) as Goal[];
-    } catch (err) {
-      console.error('Failed to load goals', err);
-    }
-    return [];
-  });
+  const { user } = useAuth();
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -46,13 +40,21 @@ export default function Goals() {
     completed: false,
   });
 
+  // Fetch goals from Supabase on mount
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(goals));
-    } catch (err) {
-      console.error('Failed to save goals', err);
-    }
-  }, [goals]);
+    if (!user) return;
+    setDbLoading(true);
+    supabase
+      .from('goals')
+      .select('id, title, description, progress, deadline, category, completed')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) console.error('Failed to load goals', error);
+        else setGoals((data as Goal[]) ?? []);
+        setDbLoading(false);
+      });
+  }, [user]);
 
   const stats = useMemo(() => {
     const total = goals.length;
@@ -62,27 +64,40 @@ export default function Goals() {
     return { total, completed, inProgress, completionRate };
   }, [goals]);
 
-  const handleAddGoal = (e: React.FormEvent) => {
+  const handleAddGoal = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newGoal: Goal = {
-      id: Date.now() + Math.floor(Math.random() * 1000),
+    if (!user) return;
+    const payload = {
       title: addForm.title,
       description: addForm.description,
       category: addForm.category || 'General',
       deadline: addForm.deadline || 'No deadline',
       progress: Math.min(100, Math.max(0, addForm.progress)),
       completed: addForm.completed,
+      user_id: user.id,
     };
-    setGoals(prev => [newGoal, ...prev]);
+    const { data, error } = await supabase
+      .from('goals')
+      .insert(payload)
+      .select('id, title, description, progress, deadline, category, completed')
+      .single();
+    if (error) { console.error('Failed to add goal', error); return; }
+    setGoals(prev => [data as Goal, ...prev]);
     setIsAddOpen(false);
     setAddForm({ title: '', description: '', category: '', deadline: '', progress: 0, completed: false });
   };
 
-  const handleDeleteGoal = (id: number) => {
+  const handleDeleteGoal = async (id: string) => {
+    const { error } = await supabase.from('goals').delete().eq('id', id);
+    if (error) { console.error('Failed to delete goal', error); return; }
     setGoals(prev => prev.filter(g => g.id !== id));
   };
 
-  const toggleCompleted = (id: number) => {
+  const toggleCompleted = async (id: string) => {
+    const goal = goals.find(g => g.id === id);
+    if (!goal) return;
+    const { error } = await supabase.from('goals').update({ completed: !goal.completed }).eq('id', id);
+    if (error) { console.error('Failed to toggle goal', error); return; }
     setGoals(prev => prev.map(g => g.id === id ? { ...g, completed: !g.completed } : g));
   };
 
@@ -99,21 +114,25 @@ export default function Goals() {
     setIsEditOpen(true);
   };
 
-  const handleUpdateGoal = (e: React.FormEvent) => {
+  const handleUpdateGoal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingGoal) return;
-    setGoals(prev => prev.map(g => g.id === editingGoal.id ? {
-      ...g,
+    const payload = {
       title: editForm.title,
       description: editForm.description,
       category: editForm.category || 'General',
       deadline: editForm.deadline || 'No deadline',
       progress: Math.min(100, Math.max(0, editForm.progress)),
       completed: editForm.completed,
-    } : g));
+    };
+    const { error } = await supabase.from('goals').update(payload).eq('id', editingGoal.id);
+    if (error) { console.error('Failed to update goal', error); return; }
+    setGoals(prev => prev.map(g => g.id === editingGoal.id ? { ...g, ...payload } : g));
     setIsEditOpen(false);
     setEditingGoal(null);
   };
+
+  if (dbLoading) return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 dark:border-gray-700 dark:border-t-white rounded-full animate-spin" /></div>;
 
   return (
     <>

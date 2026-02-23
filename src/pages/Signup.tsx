@@ -1,9 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Zap } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Signup() {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,12 +34,12 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Store in localStorage for demo purposes
-      localStorage.setItem('user', JSON.stringify({ name, email }));
-      navigate('/dashboard');
+      const { error } = await signUp(email, password, name);
+      if (error) {
+        setError(error.message);
+      } else {
+        navigate('/dashboard');
+      }
     } catch {
       setError('Signup failed. Please try again.');
     } finally {

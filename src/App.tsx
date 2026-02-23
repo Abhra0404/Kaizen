@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Overview from './pages/Overview';
@@ -13,17 +14,31 @@ import Signup from './pages/Signup';
 
 function App() {
   const location = useLocation();
+  const { user, loading } = useAuth();
   const isLanding = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/signup';
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-950">
+        <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 dark:border-gray-700 dark:border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (isLanding) {
     return (
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+        <Route path="/signup" element={user ? <Navigate to="/dashboard" replace /> : <Signup />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
+  }
+
+  // Protected: redirect to login if not authenticated
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   return (

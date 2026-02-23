@@ -1,6 +1,8 @@
 import { User, Lock, Bell, Palette, LogOut, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 type Item = {
   label: string;
@@ -56,50 +58,66 @@ const applyTheme = (theme: string) => {
 };
 
 export default function Settings() {
-  const initialTheme = getInitialTheme();
-  const [sections, setSections] = useState<Section[]>([
-    {
-      title: 'Account Settings',
-      icon: User,
-      items: [
-        { label: 'Email', value: 'abhra.j04@gmail.com', editable: true },
-        { label: 'Username', value: 'abhra0404', editable: true },
-        { label: 'Full Name', value: 'Abhra', editable: true },
-      ],
-    },
-    {
-      title: 'Privacy & Security',
-      icon: Lock,
-      items: [
-        { label: 'Two-Factor Authentication', value: 'Enabled', toggle: true },
-        { label: 'Password', value: '••••••••', editable: true },
-        { label: 'Login Activity', value: 'View details', link: true },
-      ],
-    },
-    {
-      title: 'Notifications',
-      icon: Bell,
-      items: [
-        { label: 'Email Notifications', value: 'On', toggle: true },
-        { label: 'Daily Summary', value: 'Off', toggle: true },
-        { label: 'Streak Reminders', value: 'On', toggle: true },
-        { label: 'Goal Updates', value: 'On', toggle: true },
-      ],
-    },
-    {
-      title: 'Preferences',
-      icon: Palette,
-      items: [
-        { label: 'Theme', value: initialTheme, select: true, options: ['Light', 'Dark', 'System'] },
-        { label: 'Language', value: 'English', select: true, options: ['English', 'Spanish', 'French', 'German'] },
-        { label: 'Timezone', value: 'EST (UTC -5)', select: true, options: ['EST (UTC -5)', 'PST (UTC -8)', 'UTC', 'IST (UTC +5:30)'] },
-      ],
-    },
-  ]);
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const userFullName: string = user?.user_metadata?.full_name ?? '';
+  const userEmail: string = user?.email ?? '';
+  const userUsername: string = userEmail.split('@')[0];
+
+  const [sections, setSections] = useState<Section[]>([]);  
 
   useEffect(() => {
-    applyTheme(initialTheme);
-  }, [initialTheme]);
+    applyTheme(getInitialTheme());
+  }, []);
+
+  useEffect(() => {
+    setSections([
+      {
+        title: 'Account Settings',
+        icon: User,
+        items: [
+          { label: 'Email', value: userEmail, editable: true },
+          { label: 'Username', value: userUsername, editable: true },
+          { label: 'Full Name', value: userFullName, editable: true },
+        ],
+      },
+      {
+        title: 'Privacy & Security',
+        icon: Lock,
+        items: [
+          { label: 'Two-Factor Authentication', value: 'Enabled', toggle: true },
+          { label: 'Password', value: '••••••••', editable: true },
+          { label: 'Login Activity', value: 'View details', link: true },
+        ],
+      },
+      {
+        title: 'Notifications',
+        icon: Bell,
+        items: [
+          { label: 'Email Notifications', value: 'On', toggle: true },
+          { label: 'Daily Summary', value: 'Off', toggle: true },
+          { label: 'Streak Reminders', value: 'On', toggle: true },
+          { label: 'Goal Updates', value: 'On', toggle: true },
+        ],
+      },
+      {
+        title: 'Preferences',
+        icon: Palette,
+        items: [
+          { label: 'Theme', value: getInitialTheme(), select: true, options: ['Light', 'Dark', 'System'] },
+          { label: 'Language', value: 'English', select: true, options: ['English', 'Spanish', 'French', 'German'] },
+          { label: 'Timezone', value: 'EST (UTC -5)', select: true, options: ['EST (UTC -5)', 'PST (UTC -8)', 'UTC', 'IST (UTC +5:30)'] },
+        ],
+      },
+    ]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
   
   const [editing, setEditing] = useState<{ sectionIdx: number; itemIdx: number; value: string } | null>(null);
 
@@ -231,10 +249,19 @@ export default function Settings() {
         <div className="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 p-6 transition-colors">
           <h3 className="text-lg font-semibold text-red-900 dark:text-red-400 mb-2">Danger Zone</h3>
           <p className="text-sm text-red-700 dark:text-red-300 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
-          <button className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg border-none cursor-pointer transition-colors">
-            <LogOut size={18} />
-            Delete Account
-          </button>
+          <div className="flex gap-3 flex-wrap">
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded-lg border-none cursor-pointer transition-colors"
+            >
+              <LogOut size={18} />
+              Sign Out
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg border-none cursor-pointer transition-colors">
+              <LogOut size={18} />
+              Delete Account
+            </button>
+          </div>
         </div>
 
         {editing && (

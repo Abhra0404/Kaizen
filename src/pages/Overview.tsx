@@ -6,6 +6,8 @@ import WeeklyProgress from '../components/WeeklyProgress';
 import HighlightCard from '../components/HighlightCard';
 import { Code2, CheckCircle, Target, FolderKanban } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 type Problem = { solved?: boolean; date?: string };
 type Habit = { streak?: number };
@@ -13,28 +15,32 @@ type Goal = { completed?: boolean };
 type Project = { name?: string; status?: string; progress?: number };
 
 export default function Overview() {
-  const [mode, setMode] = useState<'real' | 'sample'>('sample');
+  const { user } = useAuth();
+  const firstName = (user?.user_metadata?.full_name ?? user?.email ?? 'there').split(' ')[0];
+
+  const [mode, setMode] = useState<'real' | 'sample'>('real');
+  const [loading, setLoading] = useState(true);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const safeParse = (key: string) => {
-      try {
-        const val = localStorage.getItem(key);
-        return val ? JSON.parse(val) : [];
-      } catch {
-        return [];
-      }
-    };
-
-    setProblems(safeParse('kaizen-dsa-problems'));
-    setHabits(safeParse('kaizen-habits'));
-    setGoals(safeParse('kaizen-goals'));
-    setProjects(safeParse('kaizen-projects'));
-  }, []);
+    if (!user) return;
+    setLoading(true);
+    Promise.all([
+      supabase.from('dsa_problems').select('solved, date').eq('user_id', user.id),
+      supabase.from('habits').select('streak').eq('user_id', user.id),
+      supabase.from('goals').select('completed').eq('user_id', user.id),
+      supabase.from('projects').select('name, status, progress').eq('user_id', user.id),
+    ]).then(([dsa, hab, gol, proj]) => {
+      setProblems((dsa.data as Problem[]) ?? []);
+      setHabits((hab.data as Habit[]) ?? []);
+      setGoals((gol.data as Goal[]) ?? []);
+      setProjects((proj.data as Project[]) ?? []);
+      setLoading(false);
+    });
+  }, [user]);
 
   const getLast7DaysPoints = useMemo(() => {
     const today = new Date();
@@ -180,12 +186,20 @@ export default function Overview() {
 
   const current = datasets[mode];
 
+  if (loading && mode === 'real') {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 dark:border-gray-700 dark:border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome back, Abhra</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome back, {firstName}</h1>
           <p className="text-gray-600 dark:text-gray-400">Here's your productivity overview</p>
         </div>
         <div className="flex items-center gap-3">

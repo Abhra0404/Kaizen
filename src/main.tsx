@@ -5,6 +5,7 @@ import App from './App.tsx';
 import './index.css';
 import ErrorBoundary from './ErrorBoundary';
 import { HashRouter } from "react-router-dom";
+import { AuthProvider } from './contexts/AuthContext';
 
 
 console.log('main.tsx loaded');
@@ -16,9 +17,11 @@ try {
   createRoot(rootElement!).render(
     <StrictMode>
       <HashRouter>
-        <ErrorBoundary>
-          <App />
-        </ErrorBoundary>
+        <AuthProvider>
+          <ErrorBoundary>
+            <App />
+          </ErrorBoundary>
+        </AuthProvider>
       </HashRouter>
     </StrictMode>
   );

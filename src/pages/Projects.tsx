@@ -1,9 +1,11 @@
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Projects() {
   type Project = {
-    id: number;
+    id: string;
     name: string;
     description: string;
     status: 'Planning' | 'In Progress' | 'Review' | 'Done';
@@ -12,17 +14,9 @@ export default function Projects() {
     tags: string[];
   };
 
-  const STORAGE_KEY = 'kaizen-projects';
-
-  const [projects, setProjects] = useState<Project[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved) as Project[];
-    } catch (err) {
-      console.error('Failed to load projects', err);
-    }
-    return [];
-  });
+  const { user } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -46,13 +40,21 @@ export default function Projects() {
     tags: '',
   });
 
+  // Fetch projects from Supabase on mount
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
-    } catch (err) {
-      console.error('Failed to save projects', err);
-    }
-  }, [projects]);
+    if (!user) return;
+    setDbLoading(true);
+    supabase
+      .from('projects')
+      .select('id, name, description, status, progress, team, tags')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) console.error('Failed to load projects', error);
+        else setProjects((data as Project[]) ?? []);
+        setDbLoading(false);
+      });
+  }, [user]);
 
   const stats = useMemo(() => {
     const total = projects.length;
@@ -62,23 +64,32 @@ export default function Projects() {
     return { total, done, inProgress, avgProgress };
   }, [projects]);
 
-  const handleAddProject = (e: React.FormEvent) => {
+  const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newProject: Project = {
-      id: Date.now() + Math.floor(Math.random() * 1000),
+    if (!user) return;
+    const payload = {
       name: addForm.name,
       description: addForm.description,
       status: addForm.status,
       progress: Math.min(100, Math.max(0, addForm.progress)),
       team: addForm.team.split(',').map(t => t.trim()).filter(Boolean),
       tags: addForm.tags.split(',').map(t => t.trim()).filter(Boolean),
+      user_id: user.id,
     };
-    setProjects(prev => [newProject, ...prev]);
+    const { data, error } = await supabase
+      .from('projects')
+      .insert(payload)
+      .select('id, name, description, status, progress, team, tags')
+      .single();
+    if (error) { console.error('Failed to add project', error); return; }
+    setProjects(prev => [data as Project, ...prev]);
     setIsAddOpen(false);
     setAddForm({ name: '', description: '', status: 'Planning', progress: 0, team: '', tags: '' });
   };
 
-  const handleDeleteProject = (id: number) => {
+  const handleDeleteProject = async (id: string) => {
+    const { error } = await supabase.from('projects').delete().eq('id', id);
+    if (error) { console.error('Failed to delete project', error); return; }
     setProjects(prev => prev.filter(p => p.id !== id));
   };
 
@@ -95,23 +106,27 @@ export default function Projects() {
     setIsEditOpen(true);
   };
 
-  const handleUpdateProject = (e: React.FormEvent) => {
+  const handleUpdateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProject) return;
-    setProjects(prev => prev.map(p => p.id === editingProject.id ? {
-      ...p,
+    const payload = {
       name: editForm.name,
       description: editForm.description,
       status: editForm.status,
       progress: Math.min(100, Math.max(0, editForm.progress)),
       team: editForm.team.split(',').map(t => t.trim()).filter(Boolean),
       tags: editForm.tags.split(',').map(t => t.trim()).filter(Boolean),
-    } : p));
+    };
+    const { error } = await supabase.from('projects').update(payload).eq('id', editingProject.id);
+    if (error) { console.error('Failed to update project', error); return; }
+    setProjects(prev => prev.map(p => p.id === editingProject.id ? { ...p, ...payload } : p));
     setIsEditOpen(false);
     setEditingProject(null);
   };
 
   // status pill styling inlined below; removed Tailwind mapping
+
+  if (dbLoading) return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 dark:border-gray-700 dark:border-t-white rounded-full animate-spin" /></div>;
 
   return (
     <>

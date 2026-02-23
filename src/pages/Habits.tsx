@@ -1,25 +1,19 @@
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 type Habit = {
-  id: number;
+  id: string;
   name: string;
   frequency: 'Daily' | 'Weekly';
   streak: number;
 };
 
-const STORAGE_KEY = 'kaizen-habits';
-
 export default function Habits() {
-  const [habits, setHabits] = useState<Habit[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved) as Habit[];
-    } catch (err) {
-      console.error('Failed to load habits', err);
-    }
-    return [];
-  });
+  const { user } = useAuth();
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -35,13 +29,21 @@ export default function Habits() {
     streak: 0,
   });
 
+  // Fetch habits from Supabase on mount
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
-    } catch (err) {
-      console.error('Failed to save habits', err);
-    }
-  }, [habits]);
+    if (!user) return;
+    setDbLoading(true);
+    supabase
+      .from('habits')
+      .select('id, name, frequency, streak')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) console.error('Failed to load habits', error);
+        else setHabits((data as Habit[]) ?? []);
+        setDbLoading(false);
+      });
+  }, [user]);
 
   const stats = useMemo(() => {
     const active = habits.length;
@@ -51,23 +53,33 @@ export default function Habits() {
     return { active, totalStreak, bestStreak, dailyCount };
   }, [habits]);
 
-  const handleAddHabit = (e: React.FormEvent) => {
+  const handleAddHabit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newHabit: Habit = {
-      id: Date.now() + Math.floor(Math.random() * 1000),
-      ...formData,
-    };
-    setHabits(prev => [newHabit, ...prev]);
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('habits')
+      .insert({ ...formData, user_id: user.id })
+      .select('id, name, frequency, streak')
+      .single();
+    if (error) { console.error('Failed to add habit', error); return; }
+    setHabits(prev => [data as Habit, ...prev]);
     setIsModalOpen(false);
     setFormData({ name: '', frequency: 'Daily', streak: 0 });
   };
 
-  const handleDeleteHabit = (id: number) => {
+  const handleDeleteHabit = async (id: string) => {
+    const { error } = await supabase.from('habits').delete().eq('id', id);
+    if (error) { console.error('Failed to delete habit', error); return; }
     setHabits(prev => prev.filter(h => h.id !== id));
   };
 
-  const handleIncrementStreak = (id: number) => {
-    setHabits(prev => prev.map(h => h.id === id ? { ...h, streak: h.streak + 1 } : h));
+  const handleIncrementStreak = async (id: string) => {
+    const habit = habits.find(h => h.id === id);
+    if (!habit) return;
+    const newStreak = habit.streak + 1;
+    const { error } = await supabase.from('habits').update({ streak: newStreak }).eq('id', id);
+    if (error) { console.error('Failed to update streak', error); return; }
+    setHabits(prev => prev.map(h => h.id === id ? { ...h, streak: newStreak } : h));
   };
 
   const startEditHabit = (habit: Habit) => {
@@ -75,9 +87,14 @@ export default function Habits() {
     setEditFormData({ name: habit.name, frequency: habit.frequency, streak: habit.streak });
   };
 
-  const handleUpdateHabit = (e: React.FormEvent) => {
+  const handleUpdateHabit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingHabit) return;
+    const { error } = await supabase
+      .from('habits')
+      .update(editFormData)
+      .eq('id', editingHabit.id);
+    if (error) { console.error('Failed to update habit', error); return; }
     setHabits(prev => prev.map(h => h.id === editingHabit.id ? { ...h, ...editFormData } : h));
     setEditingHabit(null);
   };
@@ -94,6 +111,9 @@ export default function Habits() {
         <p className="text-sm text-gray-500 dark:text-gray-400">Daily momentum at a glance</p>
       </div>
 
+      {dbLoading ? (
+        <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 dark:border-gray-700 dark:border-t-white rounded-full animate-spin" /></div>
+      ) : (<>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Active Habits</p>
@@ -128,7 +148,7 @@ export default function Habits() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {habits.map((habit, index) => (
+        {habits.map((habit) => (
           <div key={habit.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 transition-colors">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -325,6 +345,7 @@ export default function Habits() {
           </div>
         </div>
       )}
+      </>)}
     </>
   );
 }

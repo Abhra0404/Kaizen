@@ -1,8 +1,10 @@
 import { Filter, Plus, Trash2, TrendingUp, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 type Problem = {
-  id: number;
+  id: string;
   title: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   topic: string;
@@ -11,19 +13,9 @@ type Problem = {
 };
 
 export default function DSA() {
-  const STORAGE_KEY = 'kaizen-dsa-problems';
-
-  const [problems, setProblems] = useState<Problem[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved) as Problem[];
-      }
-    } catch (err) {
-      console.error('Failed to load problems from storage', err);
-    }
-    return [];
-  });
+  const { user } = useAuth();
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,33 +25,50 @@ export default function DSA() {
     solved: false,
   });
 
+  // Fetch problems from Supabase on mount
+  useEffect(() => {
+    if (!user) return;
+    setDbLoading(true);
+    supabase
+      .from('dsa_problems')
+      .select('id, title, difficulty, topic, solved, date')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) console.error('Failed to load problems', error);
+        else setProblems((data as Problem[]) ?? []);
+        setDbLoading(false);
+      });
+  }, [user]);
+
   const totalCount = problems.length;
   const solvedCount = problems.filter(p => p.solved).length;
   const easyCount = problems.filter(p => p.difficulty === 'Easy').length;
   const mediumCount = problems.filter(p => p.difficulty === 'Medium').length;
   const hardCount = problems.filter(p => p.difficulty === 'Hard').length;
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(problems));
-    } catch (err) {
-      console.error('Failed to save problems to storage', err);
-    }
-  }, [problems]);
-
-  const handleAddProblem = (e: React.FormEvent) => {
+  const handleAddProblem = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newProblem: Problem = {
-      id: Date.now() + Math.floor(Math.random() * 1000),
+    if (!user) return;
+    const payload = {
       ...formData,
       date: new Date().toISOString().split('T')[0],
+      user_id: user.id,
     };
-    setProblems([newProblem, ...problems]);
+    const { data, error } = await supabase
+      .from('dsa_problems')
+      .insert(payload)
+      .select('id, title, difficulty, topic, solved, date')
+      .single();
+    if (error) { console.error('Failed to add problem', error); return; }
+    setProblems([data as Problem, ...problems]);
     setIsModalOpen(false);
     setFormData({ title: '', difficulty: 'Easy', topic: '', solved: false });
   };
 
-  const handleDeleteProblem = (id: number) => {
+  const handleDeleteProblem = async (id: string) => {
+    const { error } = await supabase.from('dsa_problems').delete().eq('id', id);
+    if (error) { console.error('Failed to delete problem', error); return; }
     setProblems(prev => prev.filter(problem => problem.id !== id));
   };
 
@@ -68,6 +77,8 @@ export default function DSA() {
     Medium: { bg: '#fff7ed', text: '#9a3412', border: '#fed7aa' },
     Hard: { bg: '#fef2f2', text: '#991b1b', border: '#fecaca' },
   };
+
+  if (dbLoading) return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 dark:border-gray-700 dark:border-t-white rounded-full animate-spin" /></div>;
 
   return (
     <>
