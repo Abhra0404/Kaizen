@@ -1,10 +1,9 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Zap, Mail } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Signup() {
-  const navigate = useNavigate();
   const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -12,6 +11,8 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +39,8 @@ export default function Signup() {
       if (error) {
         setError(error.message);
       } else {
-        navigate('/dashboard');
+        setSubmittedEmail(email);
+        setSubmitted(true);
       }
     } catch {
       setError('Signup failed. Please try again.');
@@ -75,6 +77,28 @@ export default function Signup() {
       {/* Signup Form */}
       <div className="flex-1 flex items-center justify-center px-6 pt-24 pb-12">
         <div className="w-full max-w-md">
+          {submitted ? (
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Mail size={36} className="text-gray-700 dark:text-gray-300" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Check your email</h2>
+                <p className="text-gray-600 dark:text-gray-400">We sent a verification link to</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{submittedEmail}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-500 pt-1">Click the link in the email to verify your account, then sign in.</p>
+              </div>
+              <Link
+                to="/login"
+                className="inline-block w-full px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
+              >
+                Go to Sign In
+              </Link>
+              <p className="text-xs text-gray-400 dark:text-gray-600">Didn't receive it? Check your spam folder.</p>
+            </div>
+          ) : (
           <div className="space-y-8">
             {/* Header */}
             <div className="space-y-3 text-center">
@@ -184,6 +208,7 @@ export default function Signup() {
               </Link>
             </div>
           </div>
+          )}
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { Search, Bell, Moon, Sun, ArrowLeft } from 'lucide-react';
+import { Search, Moon, Sun, ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,6 +8,7 @@ export default function Navbar() {
   const fullName: string = user?.user_metadata?.full_name ?? user?.email ?? 'User';
   const firstName = fullName.split(' ')[0];
   const initial = firstName.charAt(0).toUpperCase();
+  const avatarUrl: string = user?.user_metadata?.avatar_url ?? '';
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme');
     return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -51,17 +52,16 @@ export default function Navbar() {
         >
           {isDark ? <Sun size={18} className="text-gray-400" /> : <Moon size={18} className="text-gray-700" />}
         </button>
-        <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200">
-          <Bell size={18} className="text-gray-600 dark:text-gray-400" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
         <div className="flex items-center gap-3 ml-2 pl-3 border-l border-gray-200 dark:border-gray-700">
-          <div className="text-right">
-            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{firstName}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
-          </div>
-          <div className="w-9 h-9 bg-gradient-to-br from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 rounded-lg flex items-center justify-center text-white dark:text-gray-900 text-sm font-bold shadow-sm">
-            {initial}
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{firstName}</p>
+          <div className="w-9 h-9 rounded-lg overflow-hidden shadow-sm shrink-0">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={firstName} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 flex items-center justify-center text-white dark:text-gray-900 text-sm font-bold">
+                {initial}
+              </div>
+            )}
           </div>
         </div>
       </div>
