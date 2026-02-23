@@ -1,9 +1,4 @@
-Perfect. We’re going ultra-clean. Minimal. Professional. No fluff.
-Something that feels like a serious full-stack product.
 
-Here’s your **refined GitHub aesthetic README** 👇
-
----
 
 # Kaizen
 
