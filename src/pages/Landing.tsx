@@ -79,26 +79,18 @@ export default function Landing() {
             </div>
             <span className="text-lg font-bold tracking-tight group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">Kaizen</span>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            <p className="hidden sm:block text-base text-gray-500 dark:text-gray-400 italic text-right">
+              "One percent stronger. Every single day."
+              <span className="not-italic font-semibold text-gray-700 dark:text-gray-300"> — kaizenX</span>
+            </p>
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg transition-all duration-200"
+              className="p-2 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg transition-all duration-200"
               aria-label="Toggle dark mode"
             >
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <Link 
-              to="/login"
-              className="text-sm font-medium px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg transition-all duration-200"
-            >
-              Login
-            </Link>
-            <Link 
-              to="/signup"
-              className="text-sm font-semibold px-6 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
-            >
-              Sign Up
-            </Link>
           </div>
         </div>
       </nav>
@@ -155,12 +147,6 @@ export default function Landing() {
               className="px-8 py-4 border-2 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
             >
               Log In
-            </Link>
-            <Link
-              to="/dashboard"
-              className="px-8 py-4 border-2 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
-            >
-              Explore Dashboard
             </Link>
           </div>
         </div>
