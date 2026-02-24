@@ -1,7 +1,17 @@
 import { Link } from 'react-router-dom';
-import { Zap, Mail } from 'lucide-react';
-import { useState } from 'react';
+import { Zap, Mail, Clock } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+
+const RATE_LIMIT_COOLDOWN = 60; // seconds
+
+function isRateLimitError(message: string) {
+  return (
+    message.toLowerCase().includes('rate limit') ||
+    message.toLowerCase().includes('too many') ||
+    message.toLowerCase().includes('over_email_send_rate_limit')
+  );
+}
 
 export default function Signup() {
   const { signUp } = useAuth();
@@ -13,6 +23,28 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
+
+  const startCooldown = () => {
+    setCooldown(RATE_LIMIT_COOLDOWN);
+    cooldownRef.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current!);
+          cooldownRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +69,12 @@ export default function Signup() {
     try {
       const { error } = await signUp(email, password, name);
       if (error) {
-        setError(error.message);
+        if (isRateLimitError(error.message)) {
+          setError('Too many signup attempts. Please wait before trying again.');
+          startCooldown();
+        } else {
+          setError(error.message);
+        }
       } else {
         setSubmittedEmail(email);
         setSubmitted(true);
@@ -170,18 +207,24 @@ export default function Signup() {
 
               {/* Error Message */}
               {error && (
-                <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg text-red-600 dark:text-red-400 text-sm">
-                  {error}
+                <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg text-red-600 dark:text-red-400 text-sm space-y-1">
+                  <p>{error}</p>
+                  {cooldown > 0 && (
+                    <p className="flex items-center gap-1.5 font-medium">
+                      <Clock size={13} className="shrink-0" />
+                      Try again in {cooldown}s
+                    </p>
+                  )}
                 </div>
               )}
 
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || cooldown > 0}
                 className="w-full px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
-                {loading ? 'Creating account...' : 'Create account'}
+                {loading ? 'Creating account...' : cooldown > 0 ? `Wait ${cooldown}s` : 'Create account'}
               </button>
             </form>
 
