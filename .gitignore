@@ -23,6 +23,15 @@ pnpm-debug.log*
 .env.local
 .env.*.local
 
+# Code review graph
+.claude/
+.code-review-graph/
+
+# Implementation plan
+CLAUDE.md
+implement_leetcode.md
+implement_landing_page.md
+
 # Editor/OS
 .DS_Store
 .vscode/

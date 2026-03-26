@@ -1,18 +1,21 @@
-import MetricCard from '../components/MetricCard';
-import ChartCard from '../components/ChartCard';
-import ProgressCircle from '../components/ProgressCircle';
-import ProjectsList from '../components/ProjectsList';
-import WeeklyProgress from '../components/WeeklyProgress';
-import HighlightCard from '../components/HighlightCard';
+import MetricCard from '@/components/dashboard/MetricCard';
+import ChartCard from '@/components/dashboard/ChartCard';
+import ProgressCircle from '@/components/dashboard/ProgressCircle';
+import ProjectsList from '@/components/dashboard/ProjectsList';
+import WeeklyProgress from '@/components/dashboard/WeeklyProgress';
+import HighlightCard from '@/components/dashboard/HighlightCard';
 import { Code2, CheckCircle, Target, FolderKanban } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import type { PartialProblem, PartialHabit, PartialGoal, PartialProject } from '@/types';
+import Spinner from '@/components/ui/Spinner';
+import ErrorBanner from '@/components/ui/ErrorBanner';
 
-type Problem = { solved?: boolean; date?: string };
-type Habit = { streak?: number };
-type Goal = { completed?: boolean };
-type Project = { name?: string; status?: string; progress?: number };
+type Problem = PartialProblem;
+type Habit = PartialHabit;
+type Goal = PartialGoal;
+type Project = PartialProject;
 
 export default function Overview() {
   const { user } = useAuth();
@@ -20,6 +23,7 @@ export default function Overview() {
 
   const [mode, setMode] = useState<'real' | 'sample'>('real');
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -27,19 +31,31 @@ export default function Overview() {
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     setLoading(true);
+    setFetchError(null);
     Promise.all([
       supabase.from('dsa_problems').select('solved, date').eq('user_id', user.id),
       supabase.from('habits').select('streak').eq('user_id', user.id),
       supabase.from('goals').select('completed').eq('user_id', user.id),
       supabase.from('projects').select('name, status, progress').eq('user_id', user.id),
     ]).then(([dsa, hab, gol, proj]) => {
+      if (cancelled) return;
+      const errors = [dsa.error, hab.error, gol.error, proj.error].filter(Boolean);
+      if (errors.length > 0) {
+        setFetchError(errors.map(e => e!.message).join('; '));
+      }
       setProblems((dsa.data as Problem[]) ?? []);
       setHabits((hab.data as Habit[]) ?? []);
       setGoals((gol.data as Goal[]) ?? []);
       setProjects((proj.data as Project[]) ?? []);
       setLoading(false);
+    }).catch((err) => {
+      if (cancelled) return;
+      setFetchError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      setLoading(false);
     });
+    return () => { cancelled = true; };
   }, [user]);
 
   const getLast7DaysPoints = useMemo(() => {
@@ -150,7 +166,7 @@ export default function Overview() {
         name: p.name ?? 'Untitled Project',
         status: p.status ?? 'In Progress',
         progress: Math.min(100, Math.max(0, Number(p.progress ?? 0))),
-        color: '#3b82f6',
+        color: '#10b981',
       })),
       highlight: (() => {
         const focusHours = (problems.length * 0.5).toFixed(1);
@@ -203,7 +219,7 @@ export default function Overview() {
       },
       projects: [
         { name: 'Sample Landing Page', status: 'Planning', progress: 15, color: '#9ca3af' },
-        { name: 'Sample Mobile App', status: 'In Progress', progress: 40, color: '#3b82f6' },
+        { name: 'Sample Mobile App', status: 'In Progress', progress: 40, color: '#10b981' },
         { name: 'Sample API', status: 'Review', progress: 70, color: '#10b981' },
       ],
       highlight: {
@@ -221,27 +237,25 @@ export default function Overview() {
   const current = datasets[mode];
 
   if (loading && mode === 'real') {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 dark:border-gray-700 dark:border-t-white rounded-full animate-spin" />
-      </div>
-    );
+    return <Spinner className="h-64" />;
   }
 
   return (
     <div className="space-y-8">
+      <ErrorBanner message={fetchError} onDismiss={() => setFetchError(null)} />
+
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome back, {firstName}</h1>
-          <p className="text-gray-600 dark:text-gray-400">Here's your productivity overview</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-primary mb-2">Welcome back, {firstName}</h1>
+          <p className="text-gray-600 dark:text-dark-muted">Here's your productivity overview</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-1">
+          <div className="flex items-center gap-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg p-1">
             <button
               onClick={() => setMode('real')}
               className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                mode === 'real' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'text-gray-700 dark:text-gray-300'
+                mode === 'real' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'text-gray-700 dark:text-dark-secondary'
               }`}
             >
               Real
@@ -249,7 +263,7 @@ export default function Overview() {
             <button
               onClick={() => setMode('sample')}
               className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                mode === 'sample' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'text-gray-700 dark:text-gray-300'
+                mode === 'sample' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'text-gray-700 dark:text-dark-secondary'
               }`}
             >
               Sample
@@ -266,8 +280,8 @@ export default function Overview() {
             icon={metric.icon}
             value={metric.value}
             label={metric.label}
-            iconBgColor="bg-gray-100 dark:bg-gray-800"
-            iconColor="text-gray-700 dark:text-gray-300"
+            iconBgColor="bg-gray-100 dark:bg-dark-card"
+            iconColor="text-gray-700 dark:text-dark-secondary"
             primary={idx === 0}
             trend={metric.trend}
           />

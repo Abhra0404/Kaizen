@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Session, User, AuthError } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -46,7 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } },
+      options: {
+        data: { full_name: name },
+        // Always redirect back to the current origin so email links work
+        // regardless of which environment (localhost vs production) sent the email.
+        emailRedirectTo: window.location.origin,
+      },
     });
     return { error };
   };

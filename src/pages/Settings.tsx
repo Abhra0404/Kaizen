@@ -1,9 +1,15 @@
-import { User, Lock, Bell, Palette, LogOut, X, Sparkles, Camera, Trash2, Monitor, Clock, Shield } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { User, Lock, Bell, Palette, LogOut, Sparkles, Camera, Trash2, Monitor, Clock, Shield, Code } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import * as leetcodeService from '@/services/leetcode';
 import type { LucideIcon } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { THEME_OPTIONS } from '@/constants';
+import type { ThemeOption } from '@/constants';
+import PageHeader from '@/components/ui/PageHeader';
+import Modal from '@/components/ui/Modal';
 
 type Item = {
   label: string;
@@ -23,45 +29,9 @@ type Section = {
   blurred?: boolean;
 };
 
-const getInitialTheme = () => {
-  if (typeof window === 'undefined') return 'Light';
-  const stored = localStorage.getItem('theme');
-  if (stored === 'dark') return 'Dark';
-  if (stored === 'light') return 'Light';
-  return 'System';
-};
-
-const applyTheme = (theme: string) => {
-  if (typeof window === 'undefined') return;
-  const root = document.documentElement;
-
-  const setDark = () => {
-    root.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
-  };
-
-  const setLight = () => {
-    root.classList.remove('dark');
-    localStorage.setItem('theme', 'light');
-  };
-
-  if (theme === 'Dark') {
-    setDark();
-  } else if (theme === 'Light') {
-    setLight();
-  } else {
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (prefersDark) {
-      setDark();
-    } else {
-      setLight();
-    }
-    localStorage.setItem('theme', 'system');
-  }
-};
-
 export default function Settings() {
   const { signOut, user } = useAuth();
+  const { theme: currentTheme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -71,7 +41,7 @@ export default function Settings() {
 
   const userFullName: string = user?.user_metadata?.full_name ?? '';
   const userEmail: string = user?.email ?? '';
-  const userUsername: string = userEmail.split('@')[0];
+  const userUsername: string = user?.user_metadata?.username ?? userEmail.split('@')[0];
   const avatarUrl: string = user?.user_metadata?.avatar_url ?? '';
   const initial = (userFullName || userEmail).charAt(0).toUpperCase();
 
@@ -79,6 +49,17 @@ export default function Settings() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // LeetCode integration state
+  const [leetcodeUsername, setLeetcodeUsername] = useState('');
+  const [lcSaving, setLcSaving] = useState(false);
+  const [lcSaved, setLcSaved] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      leetcodeService.getLeetCodeUsername(user.id).then(setLeetcodeUsername);
+    }
+  }, [user]);
 
   useEffect(() => {
     setAvatarPreview(user?.user_metadata?.avatar_url ?? '');
@@ -124,11 +105,22 @@ export default function Settings() {
     setAvatarUploading(false);
   };
 
-  const [sections, setSections] = useState<Section[]>([]);  
+  const handleSaveLeetCode = async () => {
+    if (!user) return;
+    setLcSaving(true);
+    try {
+      await leetcodeService.saveLeetCodeUsername(user.id, leetcodeUsername);
+      setLcSaved(true);
+      setTimeout(() => setLcSaved(false), 2000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('LeetCode save error:', err);
+      alert(`Failed to save LeetCode username: ${msg}`);
+    }
+    setLcSaving(false);
+  };
 
-  useEffect(() => {
-    applyTheme(getInitialTheme());
-  }, []);
+  const [sections, setSections] = useState<Section[]>([]);
 
   useEffect(() => {
     setSections([
@@ -153,7 +145,7 @@ export default function Settings() {
         title: 'Preferences',
         icon: Palette,
         items: [
-          { label: 'Theme', value: getInitialTheme(), select: true, options: ['Light', 'Dark', 'System'] },
+          { label: 'Theme', value: currentTheme, select: true, options: [...THEME_OPTIONS] },
         ],
       },
       {
@@ -169,7 +161,7 @@ export default function Settings() {
       },
     ]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, currentTheme]);
   
   const [editing, setEditing] = useState<{ sectionIdx: number; itemIdx: number; value: string } | null>(null);
   const [changingPassword, setChangingPassword] = useState(false);
@@ -262,16 +254,36 @@ export default function Settings() {
     setEditing({ sectionIdx, itemIdx, value });
   };
 
-  const handleEditSave = (e: React.FormEvent) => {
+  const handleEditSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editing) return;
-    setSections(prev => prev.map((section, sIdx) => {
-      if (sIdx !== editing.sectionIdx) return section;
-      return {
-        ...section,
-        items: section.items.map((item, iIdx) => iIdx === editing.itemIdx ? { ...item, value: editing.value } : item),
-      };
-    }));
+
+    const field = sections[editing.sectionIdx]?.items[editing.itemIdx]?.label;
+    const newValue = editing.value.trim();
+    if (!newValue) return;
+
+    try {
+      if (field === 'Email') {
+        const { error } = await supabase.auth.updateUser({ email: newValue });
+        if (error) { alert(error.message); return; }
+      } else if (field === 'Full Name') {
+        const { error } = await supabase.auth.updateUser({ data: { full_name: newValue } });
+        if (error) { alert(error.message); return; }
+      } else if (field === 'Username') {
+        const { error } = await supabase.auth.updateUser({ data: { username: newValue } });
+        if (error) { alert(error.message); return; }
+      }
+
+      setSections(prev => prev.map((section, sIdx) => {
+        if (sIdx !== editing.sectionIdx) return section;
+        return {
+          ...section,
+          items: section.items.map((item, iIdx) => iIdx === editing.itemIdx ? { ...item, value: newValue } : item),
+        };
+      }));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to save changes');
+    }
     setEditing(null);
   };
 
@@ -285,28 +297,25 @@ export default function Settings() {
     }));
 
     if (sections[sectionIdx]?.title === 'Preferences' && sections[sectionIdx]?.items[itemIdx]?.label === 'Theme') {
-      applyTheme(value);
+      setTheme(value as ThemeOption);
     }
   };
 
   return (
     <>
-      <div className="mb-10">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">Manage your account and preferences</p>
-      </div>
+      <PageHeader title="Settings" subtitle="Manage your account and preferences" />
 
       <div className="flex flex-col gap-6 max-w-3xl">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">Profile & Controls</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Update information and safeguards</p>
+          <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-dark-primary">Profile & Controls</h2>
+          <p className="text-sm text-gray-500 dark:text-dark-muted">Update information and safeguards</p>
         </div>
 
         {/* Profile Picture Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <div className="p-4 px-6 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-            <Camera size={20} className="text-gray-700 dark:text-gray-300" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Profile Picture</h3>
+        <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-dark-border transition-colors">
+          <div className="p-4 px-6 border-b border-gray-200 dark:border-dark-border flex items-center gap-3">
+            <Camera size={20} className="text-gray-700 dark:text-dark-secondary" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-primary">Profile Picture</h3>
           </div>
           <div className="p-6 flex items-center gap-6">
             {/* Avatar display */}
@@ -315,7 +324,7 @@ export default function Settings() {
                 <img
                   src={avatarPreview}
                   alt="Profile"
-                  className="w-20 h-20 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600"
+                  className="w-20 h-20 rounded-full object-cover ring-2 ring-gray-200 dark:ring-dark-border"
                 />
               ) : (
                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 flex items-center justify-center text-white dark:text-gray-900 text-2xl font-bold">
@@ -331,7 +340,7 @@ export default function Settings() {
 
             {/* Controls */}
             <div className="flex flex-col gap-2">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Upload a photo. Max size 2MB.</p>
+              <p className="text-sm text-gray-600 dark:text-dark-muted">Upload a photo. Max size 2MB.</p>
               {avatarError && <p className="text-xs text-red-500">{avatarError}</p>}
               <div className="flex gap-2 flex-wrap">
                 <button
@@ -366,24 +375,24 @@ export default function Settings() {
         {sections.map((section, idx) => {
           const Icon = section.icon;
           return (
-            <div key={idx} className="relative rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm">
+            <div key={idx} className="relative rounded-xl overflow-hidden border border-gray-100 dark:border-dark-border shadow-sm">
               {/* Header – never blurred */}
-              <div className="bg-white dark:bg-gray-800 p-4 px-6 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-                <Icon size={20} className="text-gray-700 dark:text-gray-300" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{section.title}</h3>
+              <div className="bg-white dark:bg-dark-card p-4 px-6 border-b border-gray-200 dark:border-dark-border flex items-center gap-3">
+                <Icon size={20} className="text-gray-700 dark:text-dark-secondary" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-primary">{section.title}</h3>
               </div>
 
               {section.blurred ? (
                 <div className="relative">
                   <div className="blur-sm pointer-events-none select-none">
-                    <div className="bg-white dark:bg-gray-800 p-6 flex flex-col gap-6">
+                    <div className="bg-white dark:bg-dark-card p-6 flex flex-col gap-6">
                       {section.items.map((item, itemIdx) => (
                         <div key={itemIdx} className={`flex items-center justify-between pb-6 ${
-                          itemIdx === section.items.length - 1 ? '' : 'border-b border-gray-100 dark:border-gray-700'
+                          itemIdx === section.items.length - 1 ? '' : 'border-b border-gray-100 dark:border-dark-border'
                         }`}>
                           <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{item.label}</p>
-                            <p className="text-sm text-gray-900 dark:text-white font-medium">{item.value}</p>
+                            <p className="text-sm text-gray-600 dark:text-dark-muted mb-1">{item.label}</p>
+                            <p className="text-sm text-gray-900 dark:text-dark-primary font-medium">{item.value}</p>
                           </div>
                           {item.toggle && (
                             <div className={`relative inline-flex h-6 w-11 items-center rounded-full ${
@@ -398,7 +407,7 @@ export default function Settings() {
                       ))}
                     </div>
                   </div>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/30 dark:bg-gray-900/30 backdrop-blur-[2px]">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/30 dark:bg-dark-surface/30 backdrop-blur-[2px]">
                     <div className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-2.5 rounded-full shadow-lg">
                       <Bell size={16} className="shrink-0" />
                       <span className="text-sm font-semibold tracking-wide">Coming Soon</span>
@@ -406,23 +415,23 @@ export default function Settings() {
                   </div>
                 </div>
               ) : (
-              <div className="bg-white dark:bg-gray-800 p-6 flex flex-col gap-6">
+              <div className="bg-white dark:bg-dark-card p-6 flex flex-col gap-6">
                 {section.items.map((item, itemIdx) => (
                   <div key={itemIdx} className={`flex items-center justify-between pb-6 ${
-                    itemIdx === section.items.length - 1 ? '' : 'border-b border-gray-100 dark:border-gray-700'
+                    itemIdx === section.items.length - 1 ? '' : 'border-b border-gray-100 dark:border-dark-border'
                   }`}>
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{item.label}</p>
+                      <p className="text-sm text-gray-600 dark:text-dark-muted mb-1">{item.label}</p>
                       {item.link ? (
                         <button
                           onClick={handleViewLoginActivity}
-                          className="text-sm text-blue-500 hover:text-blue-600 bg-transparent border-none p-0 cursor-pointer font-medium">
+                          className="text-sm text-gray-700 dark:text-dark-secondary hover:text-gray-900 dark:hover:text-dark-primary bg-transparent border-none p-0 cursor-pointer font-medium">
                           {item.value}
                         </button>
                       ) : item.editable || item.select ? (
-                        <p className="text-sm text-gray-900 dark:text-white font-medium">{item.value}</p>
+                        <p className="text-sm text-gray-900 dark:text-dark-primary font-medium">{item.value}</p>
                       ) : (
-                        <p className="text-sm text-gray-900 dark:text-white font-medium">{item.value}</p>
+                        <p className="text-sm text-gray-900 dark:text-dark-primary font-medium">{item.value}</p>
                       )}
                     </div>
 
@@ -430,7 +439,7 @@ export default function Settings() {
                       <button
                         onClick={() => handleToggle(idx, itemIdx)}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full border-none cursor-pointer transition-colors ${
-                          item.value === 'On' || item.value === 'Enabled' ? 'bg-green-500 dark:bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
+                          item.value === 'On' || item.value === 'Enabled' ? 'bg-green-500 dark:bg-green-600' : 'bg-gray-300 dark:bg-dark-accent'
                         }`}
                         aria-label="Toggle setting"
                       >
@@ -443,7 +452,7 @@ export default function Settings() {
                     {item.editable && (
                       <button
                         onClick={() => startEdit(idx, itemIdx, item.value)}
-                        className="text-sm text-blue-500 hover:text-blue-600 bg-transparent border-none cursor-pointer font-medium"
+                        className="text-sm text-gray-700 dark:text-dark-secondary hover:text-gray-900 dark:hover:text-dark-primary bg-transparent border-none cursor-pointer font-medium"
                       >
                         Edit
                       </button>
@@ -452,7 +461,7 @@ export default function Settings() {
                     {item.changePassword && (
                       <button
                         onClick={() => setChangingPassword(true)}
-                        className="text-sm text-blue-500 hover:text-blue-600 bg-transparent border-none cursor-pointer font-medium"
+                        className="text-sm text-gray-700 dark:text-dark-secondary hover:text-gray-900 dark:hover:text-dark-primary bg-transparent border-none cursor-pointer font-medium"
                       >
                         Change
                       </button>
@@ -460,7 +469,7 @@ export default function Settings() {
 
                     {item.select && (
                       <select
-                        className="text-sm text-gray-700 dark:text-gray-300 bg-transparent cursor-pointer font-medium border border-gray-200 dark:border-gray-600 rounded-md px-2 py-1 dark:bg-gray-700"
+                        className="text-sm text-gray-700 dark:text-dark-secondary bg-transparent cursor-pointer font-medium border border-gray-200 dark:border-dark-border rounded-md px-2 py-1 dark:bg-dark-input"
                         value={item.value}
                         onChange={(e) => handleSelectChange(idx, itemIdx, e.target.value)}
                       >
@@ -478,38 +487,38 @@ export default function Settings() {
         })}
 
         {/* AI Settings – Coming Soon */}
-        <div className="relative rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="relative rounded-xl overflow-hidden border border-gray-100 dark:border-dark-border shadow-sm">
           {/* Header – not blurred */}
-          <div className="bg-white dark:bg-gray-800 p-4 px-6 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-            <Sparkles size={20} className="text-gray-700 dark:text-gray-300" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">AI Settings</h3>
+          <div className="bg-white dark:bg-dark-card p-4 px-6 border-b border-gray-200 dark:border-dark-border flex items-center gap-3">
+            <Sparkles size={20} className="text-gray-700 dark:text-dark-secondary" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-primary">AI Settings</h3>
           </div>
           {/* Blurred body */}
           <div className="relative">
             <div className="blur-sm pointer-events-none select-none">
-              <div className="bg-white dark:bg-gray-800 p-6 flex flex-col gap-6">
-                <div className="flex items-center justify-between pb-6 border-b border-gray-100 dark:border-gray-700">
+              <div className="bg-white dark:bg-dark-card p-6 flex flex-col gap-6">
+                <div className="flex items-center justify-between pb-6 border-b border-gray-100 dark:border-dark-border">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">AI Model</p>
-                    <p className="text-sm text-gray-900 dark:text-white font-medium">GPT-4o</p>
+                    <p className="text-sm text-gray-600 dark:text-dark-muted mb-1">AI Model</p>
+                    <p className="text-sm text-gray-900 dark:text-dark-primary font-medium">GPT-4o</p>
                   </div>
-                  <select className="text-sm text-gray-700 dark:text-gray-300 bg-transparent font-medium border border-gray-200 dark:border-gray-600 rounded-md px-2 py-1 dark:bg-gray-700">
+                  <select className="text-sm text-gray-700 dark:text-dark-secondary bg-transparent font-medium border border-gray-200 dark:border-dark-border rounded-md px-2 py-1 dark:bg-dark-input">
                     <option>GPT-4o</option>
                   </select>
                 </div>
-                <div className="flex items-center justify-between pb-6 border-b border-gray-100 dark:border-gray-700">
+                <div className="flex items-center justify-between pb-6 border-b border-gray-100 dark:border-dark-border">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Smart Suggestions</p>
-                    <p className="text-sm text-gray-900 dark:text-white font-medium">On</p>
+                    <p className="text-sm text-gray-600 dark:text-dark-muted mb-1">Smart Suggestions</p>
+                    <p className="text-sm text-gray-900 dark:text-dark-primary font-medium">On</p>
                   </div>
                   <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-green-500">
                     <span className="inline-block h-4 w-4 rounded-full bg-white transform translate-x-5"></span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between pb-6 border-b border-gray-100 dark:border-gray-700">
+                <div className="flex items-center justify-between pb-6 border-b border-gray-100 dark:border-dark-border">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Daily AI Summary</p>
-                    <p className="text-sm text-gray-900 dark:text-white font-medium">Off</p>
+                    <p className="text-sm text-gray-600 dark:text-dark-muted mb-1">Daily AI Summary</p>
+                    <p className="text-sm text-gray-900 dark:text-dark-primary font-medium">Off</p>
                   </div>
                   <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-300">
                     <span className="inline-block h-4 w-4 rounded-full bg-white transform translate-x-1"></span>
@@ -517,8 +526,8 @@ export default function Settings() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Personalized Insights</p>
-                    <p className="text-sm text-gray-900 dark:text-white font-medium">On</p>
+                    <p className="text-sm text-gray-600 dark:text-dark-muted mb-1">Personalized Insights</p>
+                    <p className="text-sm text-gray-900 dark:text-dark-primary font-medium">On</p>
                   </div>
                   <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-green-500">
                     <span className="inline-block h-4 w-4 rounded-full bg-white transform translate-x-5"></span>
@@ -527,12 +536,44 @@ export default function Settings() {
               </div>
             </div>
             {/* Coming Soon overlay */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/30 dark:bg-gray-900/30 backdrop-blur-[2px]">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/30 dark:bg-dark-surface/30 backdrop-blur-[2px]">
               <div className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-2.5 rounded-full shadow-lg">
                 <Sparkles size={16} className="shrink-0" />
                 <span className="text-sm font-semibold tracking-wide">Coming Soon</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Integrations – LeetCode */}
+        <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-dark-border transition-colors">
+          <div className="p-4 px-6 border-b border-gray-200 dark:border-dark-border flex items-center gap-3">
+            <Code size={20} className="text-gray-700 dark:text-dark-secondary" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-primary">Integrations</h3>
+          </div>
+          <div className="p-6">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">
+              LeetCode Username
+            </label>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={leetcodeUsername}
+                onChange={(e) => setLeetcodeUsername(e.target.value)}
+                placeholder="e.g. uwi"
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+              />
+              <button
+                onClick={handleSaveLeetCode}
+                disabled={lcSaving}
+                className="px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 disabled:opacity-50 transition-colors"
+              >
+                {lcSaved ? 'Saved' : 'Save'}
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-gray-500 dark:text-dark-muted">
+              Your public LeetCode username. Go to DSA page and click "Sync LeetCode" to import your solved problems.
+            </p>
           </div>
         </div>
 
@@ -547,7 +588,13 @@ export default function Settings() {
               <LogOut size={18} />
               Sign Out
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg border-none cursor-pointer transition-colors">
+            <button className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg border-none cursor-pointer transition-colors"
+              onClick={() => {
+                if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                  alert('Account deletion requires a server-side admin function. Please contact support to proceed.');
+                }
+              }}
+            >
               <LogOut size={18} />
               Delete Account
             </button>
@@ -555,16 +602,9 @@ export default function Settings() {
         </div>
 
         {showLoginActivity && sessionInfo && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <Shield size={22} className="text-gray-700 dark:text-gray-300" />
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Login Activity</h3>
-                </div>
-                <button onClick={() => setShowLoginActivity(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                  <X size={24} />
-                </button>
+          <Modal open={showLoginActivity && !!sessionInfo} onClose={() => setShowLoginActivity(false)} title="Login Activity">
+              <div className="flex items-center gap-3 mb-6 -mt-4">
+                  <Shield size={22} className="text-gray-700 dark:text-dark-secondary" />
               </div>
 
               <div className="mb-4 flex items-center gap-2">
@@ -572,30 +612,30 @@ export default function Settings() {
                 <span className="text-sm font-medium text-green-600 dark:text-green-400">1 active session</span>
               </div>
 
-              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="bg-gray-50 dark:bg-gray-700/50 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Current Session</p>
+              <div className="rounded-xl border border-gray-200 dark:border-dark-border overflow-hidden">
+                <div className="bg-gray-50 dark:bg-dark-input/50 px-4 py-2 border-b border-gray-200 dark:border-dark-border">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-dark-muted">Current Session</p>
                 </div>
                 <div className="p-4 flex flex-col gap-4">
                   <div className="flex items-start gap-3">
-                    <Monitor size={18} className="text-gray-500 dark:text-gray-400 mt-0.5 shrink-0" />
+                    <Monitor size={18} className="text-gray-500 dark:text-dark-muted mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Device</p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{sessionInfo.browser} on {sessionInfo.os}</p>
+                      <p className="text-xs text-gray-500 dark:text-dark-muted">Device</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-dark-primary">{sessionInfo.browser} on {sessionInfo.os}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <Clock size={18} className="text-gray-500 dark:text-gray-400 mt-0.5 shrink-0" />
+                    <Clock size={18} className="text-gray-500 dark:text-dark-muted mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Last Sign In</p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{sessionInfo.lastSignIn}</p>
+                      <p className="text-xs text-gray-500 dark:text-dark-muted">Last Sign In</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-dark-primary">{sessionInfo.lastSignIn}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <Shield size={18} className="text-gray-500 dark:text-gray-400 mt-0.5 shrink-0" />
+                    <Shield size={18} className="text-gray-500 dark:text-dark-muted mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Session Expires</p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{sessionInfo.expiresAt}</p>
+                      <p className="text-xs text-gray-500 dark:text-dark-muted">Session Expires</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-dark-primary">{sessionInfo.expiresAt}</p>
                     </div>
                   </div>
                 </div>
@@ -603,43 +643,33 @@ export default function Settings() {
 
               <button
                 onClick={() => setShowLoginActivity(false)}
-                className="mt-5 w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="mt-5 w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-dark-secondary bg-gray-100 dark:bg-dark-input rounded-lg hover:bg-gray-200 dark:hover:bg-dark-hover transition-colors"
               >
                 Close
               </button>
-            </div>
-          </div>
+          </Modal>
         )}
 
-        {changingPassword && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Change Password</h3>
-                <button onClick={closePasswordModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                  <X size={24} />
-                </button>
-              </div>
-
+        <Modal open={changingPassword} onClose={closePasswordModal} title="Change Password">
               <form onSubmit={handleChangePassword} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New Password</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">New Password</label>
                   <input
                     type="password"
                     value={passwordForm.newPassword}
                     onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                     placeholder="Enter new password"
                     autoFocus
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm New Password</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Confirm New Password</label>
                   <input
                     type="password"
                     value={passwordForm.confirmPassword}
                     onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                     placeholder="Confirm new password"
                   />
                 </div>
@@ -648,66 +678,33 @@ export default function Settings() {
                 {passwordSuccess && <p className="text-sm text-green-600">{passwordSuccess}</p>}
 
                 <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={closePasswordModal}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 transition-colors"
-                  >
-                    Update Password
-                  </button>
+                  <button type="button" onClick={closePasswordModal} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-dark-secondary bg-gray-100 dark:bg-dark-input rounded-lg hover:bg-gray-200 dark:hover:bg-dark-hover transition-colors">Cancel</button>
+                  <button type="submit" className="flex-1 px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 transition-colors">Update Password</button>
                 </div>
               </form>
-            </div>
-          </div>
-        )}
+        </Modal>
 
-        {editing && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Edit Value</h3>
-                <button onClick={() => setEditing(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                  <X size={24} />
-                </button>
-              </div>
-
+        <Modal open={!!editing} onClose={() => setEditing(null)} title={`Edit ${editing ? sections[editing.sectionIdx]?.items[editing.itemIdx]?.label ?? 'Value' : 'Value'}`}>
               <form onSubmit={handleEditSave} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Value</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">
+                    {editing ? sections[editing.sectionIdx]?.items[editing.itemIdx]?.label ?? 'Value' : 'Value'}
+                  </label>
                   <input
                     type="text"
-                    value={editing.value}
+                    value={editing?.value ?? ''}
                     onChange={(e) => setEditing(curr => curr ? { ...curr, value: e.target.value } : null)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                     autoFocus
                   />
                 </div>
 
                 <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditing(null)}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 transition-colors"
-                  >
-                    Save
-                  </button>
+                  <button type="button" onClick={() => setEditing(null)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-dark-secondary bg-gray-100 dark:bg-dark-input rounded-lg hover:bg-gray-200 dark:hover:bg-dark-hover transition-colors">Cancel</button>
+                  <button type="submit" className="flex-1 px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 transition-colors">Save</button>
                 </div>
               </form>
-            </div>
-          </div>
-        )}
+        </Modal>
       </div>
     </>
   );

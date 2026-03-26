@@ -17,7 +17,7 @@ export default function HighlightCard({
   ],
 }: HighlightCardProps) {
   return (
-    <div className="bg-gradient-to-br from-blue-500 to-green-500 dark:from-blue-600 dark:to-green-600 rounded-xl p-6 shadow-sm text-white transition-colors">
+    <div className="bg-gradient-to-br from-emerald-500 to-teal-500 dark:from-emerald-600 dark:to-teal-600 rounded-xl p-6 shadow-sm text-white transition-colors">
       <div className="flex items-start justify-between mb-4">
         <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
           <Award size={24} color="white" />

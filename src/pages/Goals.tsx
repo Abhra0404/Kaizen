@@ -1,60 +1,23 @@
-import { CheckCircle2, Circle, Pencil, Plus, Trash2, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext';
-
-type Goal = {
-  id: string;
-  title: string;
-  description: string;
-  progress: number;
-  deadline: string;
-  category: string;
-  completed: boolean;
-};
+import { CheckCircle2, Circle, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useGoals } from '@/hooks/useGoals';
+import type { Goal } from '@/types';
+import Spinner from '@/components/ui/Spinner';
+import PageHeader from '@/components/ui/PageHeader';
+import StatCard from '@/components/ui/StatCard';
+import Modal from '@/components/ui/Modal';
+import EmptyState from '@/components/ui/EmptyState';
+import ErrorBanner from '@/components/ui/ErrorBanner';
 
 export default function Goals() {
-  const { user } = useAuth();
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [dbLoading, setDbLoading] = useState(true);
+  const { goals, loading, error, clearError, addGoal, updateGoal, removeGoal, toggleCompleted } = useGoals();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
-  const [addForm, setAddForm] = useState({
-    title: '',
-    description: '',
-    category: '',
-    deadline: '',
-    progress: 0,
-    completed: false,
-  });
-
-  const [editForm, setEditForm] = useState({
-    title: '',
-    description: '',
-    category: '',
-    deadline: '',
-    progress: 0,
-    completed: false,
-  });
-
-  // Fetch goals from Supabase on mount
-  useEffect(() => {
-    if (!user) return;
-    setDbLoading(true);
-    supabase
-      .from('goals')
-      .select('id, title, description, progress, deadline, category, completed')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) console.error('Failed to load goals', error);
-        else setGoals((data as Goal[]) ?? []);
-        setDbLoading(false);
-      });
-  }, [user]);
+  const [addForm, setAddForm] = useState({ title: '', description: '', category: '', deadline: '', progress: 0, completed: false });
+  const [editForm, setEditForm] = useState({ title: '', description: '', category: '', deadline: '', progress: 0, completed: false });
 
   const stats = useMemo(() => {
     const total = goals.length;
@@ -66,39 +29,16 @@ export default function Goals() {
 
   const handleAddGoal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-    const payload = {
+    await addGoal({
       title: addForm.title,
       description: addForm.description,
       category: addForm.category || 'General',
-      deadline: addForm.deadline || 'No deadline',
+      deadline: addForm.deadline || '',
       progress: Math.min(100, Math.max(0, addForm.progress)),
       completed: addForm.completed,
-      user_id: user.id,
-    };
-    const { data, error } = await supabase
-      .from('goals')
-      .insert(payload)
-      .select('id, title, description, progress, deadline, category, completed')
-      .single();
-    if (error) { console.error('Failed to add goal', error); return; }
-    setGoals(prev => [data as Goal, ...prev]);
+    });
     setIsAddOpen(false);
     setAddForm({ title: '', description: '', category: '', deadline: '', progress: 0, completed: false });
-  };
-
-  const handleDeleteGoal = async (id: string) => {
-    const { error } = await supabase.from('goals').delete().eq('id', id);
-    if (error) { console.error('Failed to delete goal', error); return; }
-    setGoals(prev => prev.filter(g => g.id !== id));
-  };
-
-  const toggleCompleted = async (id: string) => {
-    const goal = goals.find(g => g.id === id);
-    if (!goal) return;
-    const { error } = await supabase.from('goals').update({ completed: !goal.completed }).eq('id', id);
-    if (error) { console.error('Failed to toggle goal', error); return; }
-    setGoals(prev => prev.map(g => g.id === id ? { ...g, completed: !g.completed } : g));
   };
 
   const openEditGoal = (goal: Goal) => {
@@ -107,7 +47,7 @@ export default function Goals() {
       title: goal.title,
       description: goal.description,
       category: goal.category,
-      deadline: goal.deadline === 'No deadline' ? '' : goal.deadline,
+      deadline: goal.deadline,
       progress: goal.progress,
       completed: goal.completed,
     });
@@ -117,58 +57,51 @@ export default function Goals() {
   const handleUpdateGoal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingGoal) return;
-    const payload = {
+    await updateGoal(editingGoal.id, {
       title: editForm.title,
       description: editForm.description,
       category: editForm.category || 'General',
-      deadline: editForm.deadline || 'No deadline',
+      deadline: editForm.deadline || '',
       progress: Math.min(100, Math.max(0, editForm.progress)),
       completed: editForm.completed,
-    };
-    const { error } = await supabase.from('goals').update(payload).eq('id', editingGoal.id);
-    if (error) { console.error('Failed to update goal', error); return; }
-    setGoals(prev => prev.map(g => g.id === editingGoal.id ? { ...g, ...payload } : g));
+    });
     setIsEditOpen(false);
     setEditingGoal(null);
   };
 
-  if (dbLoading) return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 dark:border-gray-700 dark:border-t-white rounded-full animate-spin" /></div>;
+  const formatDeadline = (deadline: string) => {
+    if (!deadline) return 'No deadline';
+    try {
+      return new Date(deadline).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return deadline;
+    }
+  };
+
+  if (loading) return <Spinner className="py-12" />;
 
   return (
     <>
-      <div className="mb-10">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Goals</h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">Set and achieve meaningful learning goals</p>
-      </div>
+      <PageHeader title="Goals" subtitle="Set and achieve meaningful learning goals" />
+
+      <ErrorBanner message={error} onDismiss={clearError} />
 
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">Goal Snapshot</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Where you stand now</p>
+        <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-dark-primary">Goal Snapshot</h2>
+        <p className="text-sm text-gray-500 dark:text-dark-muted">Where you stand now</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Goals</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">In Progress</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.inProgress}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Completed</p>
-          <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.completed}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Completion Rate</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.completionRate}%</p>
-        </div>
+        <StatCard label="Total Goals" value={stats.total} />
+        <StatCard label="In Progress" value={stats.inProgress} />
+        <StatCard label="Completed" value={stats.completed} />
+        <StatCard label="Completion Rate" value={`${stats.completionRate}%`} />
       </div>
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide">Planning</p>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Active Goals</h2>
+          <p className="text-sm text-gray-500 dark:text-dark-muted uppercase tracking-wide">Planning</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-dark-primary">Active Goals</h2>
         </div>
         <button
           onClick={() => setIsAddOpen(true)}
@@ -186,7 +119,7 @@ export default function Goals() {
             className={`rounded-xl p-6 shadow-sm border transition-all ${
               goal.completed
                 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+                : 'bg-white dark:bg-dark-card border-gray-100 dark:border-dark-border'
             }`}
           >
             <div className="flex items-start gap-4">
@@ -198,38 +131,24 @@ export default function Goals() {
                 {goal.completed ? (
                   <CheckCircle2 size={24} className="text-green-600 dark:text-green-400" />
                 ) : (
-                  <Circle size={24} className="text-gray-300 dark:text-gray-600" />
+                  <Circle size={24} className="text-gray-300 dark:text-dark-border" />
                 )}
               </button>
 
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-2 gap-3">
                   <div>
-                    <h3 className={`text-lg font-semibold ${
-                      goal.completed
-                        ? 'text-gray-600 dark:text-gray-400 line-through'
-                        : 'text-gray-900 dark:text-white'
-                    }`}>
+                    <h3 className={`text-lg font-semibold ${goal.completed ? 'text-gray-600 dark:text-dark-muted line-through' : 'text-gray-900 dark:text-dark-primary'}`}>
                       {goal.title}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{goal.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-dark-muted mt-1">{goal.description}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-semibold whitespace-nowrap">
-                      {goal.category}
-                    </span>
-                    <button
-                      onClick={() => openEditGoal(goal)}
-                      className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
-                      aria-label="Edit goal"
-                    >
+                    <span className="px-3 py-1 bg-gray-100 dark:bg-dark-input text-gray-700 dark:text-dark-secondary rounded-full text-xs font-semibold whitespace-nowrap">{goal.category}</span>
+                    <button onClick={() => openEditGoal(goal)} className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors" aria-label="Edit goal">
                       <Pencil size={16} className="text-indigo-600 dark:text-indigo-300" />
                     </button>
-                    <button
-                      onClick={() => handleDeleteGoal(goal.id)}
-                      className="p-2 rounded-lg bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                      aria-label="Delete goal"
-                    >
+                    <button onClick={() => removeGoal(goal.id)} className="p-2 rounded-lg bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" aria-label="Delete goal">
                       <Trash2 size={16} className="text-red-600 dark:text-red-400" />
                     </button>
                   </div>
@@ -237,21 +156,16 @@ export default function Goals() {
 
                 <div className="mt-4 mb-2">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Progress</span>
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{goal.progress}%</span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-dark-muted">Progress</span>
+                    <span className="text-sm font-semibold text-gray-700 dark:text-dark-secondary">{goal.progress}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all ${
-                        goal.completed ? 'bg-green-500' : 'bg-blue-500'
-                      }`}
-                      style={{ width: `${goal.progress}%` }}
-                    ></div>
+                  <div className="w-full bg-gray-200 dark:bg-dark-input rounded-full h-2">
+                    <div className={`h-2 rounded-full transition-all ${goal.completed ? 'bg-green-500' : 'bg-emerald-500'}`} style={{ width: `${goal.progress}%` }} />
                   </div>
                 </div>
 
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-3">
-                  Deadline: <span className="font-semibold text-gray-700 dark:text-gray-300">{goal.deadline}</span>
+                <p className="text-xs text-gray-600 dark:text-dark-muted mt-3">
+                  Deadline: <span className="font-semibold text-gray-700 dark:text-dark-secondary">{formatDeadline(goal.deadline)}</span>
                 </p>
               </div>
             </div>
@@ -259,213 +173,75 @@ export default function Goals() {
         ))}
 
         {goals.length === 0 && (
-          <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-6 text-center text-gray-600 dark:text-gray-400">
-            No goals yet. Click "New Goal" to add your first one.
-          </div>
+          <EmptyState message='No goals yet. Click "New Goal" to add your first one.' />
         )}
       </div>
 
-      {/* Add Goal Modal */}
-      {isAddOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">New Goal</h3>
-              <button onClick={() => setIsAddOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                <X size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddGoal} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
-                <input
-                  type="text"
-                  required
-                  value={addForm.title}
-                  onChange={(e) => setAddForm({ ...addForm, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Goal title"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                <textarea
-                  required
-                  value={addForm.description}
-                  onChange={(e) => setAddForm({ ...addForm, description: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={3}
-                  placeholder="What does success look like?"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
-                <input
-                  type="text"
-                  value={addForm.category}
-                  onChange={(e) => setAddForm({ ...addForm, category: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., Learning, Health"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Deadline</label>
-                <input
-                  type="date"
-                  value={addForm.deadline}
-                  onChange={(e) => setAddForm({ ...addForm, deadline: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Progress (%)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={addForm.progress}
-                  onChange={(e) => setAddForm({ ...addForm, progress: Number(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="0 - 100"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 md:col-span-2">
-                <input
-                  type="checkbox"
-                  id="add-completed"
-                  checked={addForm.completed}
-                  onChange={(e) => setAddForm({ ...addForm, completed: e.target.checked })}
-                  className="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="add-completed" className="text-sm font-medium text-gray-700 dark:text-gray-300">Mark as completed</label>
-              </div>
-
-              <div className="md:col-span-2 flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddOpen(false)}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 transition-colors"
-                >
-                  Save Goal
-                </button>
-              </div>
-            </form>
+      <Modal open={isAddOpen} onClose={() => setIsAddOpen(false)} title="New Goal" maxWidth="max-w-2xl">
+        <form onSubmit={handleAddGoal} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Title</label>
+            <input type="text" required value={addForm.title} onChange={(e) => setAddForm({ ...addForm, title: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="Goal title" />
           </div>
-        </div>
-      )}
-
-      {/* Edit Goal Modal */}
-      {isEditOpen && editingGoal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Edit Goal</h3>
-              <button onClick={() => { setIsEditOpen(false); setEditingGoal(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                <X size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdateGoal} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
-                <input
-                  type="text"
-                  required
-                  value={editForm.title}
-                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Goal title"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                <textarea
-                  required
-                  value={editForm.description}
-                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={3}
-                  placeholder="What does success look like?"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
-                <input
-                  type="text"
-                  value={editForm.category}
-                  onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., Learning, Health"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Deadline</label>
-                <input
-                  type="date"
-                  value={editForm.deadline}
-                  onChange={(e) => setEditForm({ ...editForm, deadline: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Progress (%)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={editForm.progress}
-                  onChange={(e) => setEditForm({ ...editForm, progress: Number(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="0 - 100"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 md:col-span-2">
-                <input
-                  type="checkbox"
-                  id="edit-completed"
-                  checked={editForm.completed}
-                  onChange={(e) => setEditForm({ ...editForm, completed: e.target.checked })}
-                  className="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="edit-completed" className="text-sm font-medium text-gray-700 dark:text-gray-300">Mark as completed</label>
-              </div>
-
-              <div className="md:col-span-2 flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => { setIsEditOpen(false); setEditingGoal(null); }}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Description</label>
+            <textarea required value={addForm.description} onChange={(e) => setAddForm({ ...addForm, description: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" rows={3} placeholder="What does success look like?" />
           </div>
-        </div>
-      )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Category</label>
+            <input type="text" value={addForm.category} onChange={(e) => setAddForm({ ...addForm, category: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="e.g., Learning, Health" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Deadline</label>
+            <input type="date" value={addForm.deadline} onChange={(e) => setAddForm({ ...addForm, deadline: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Progress (%)</label>
+            <input type="number" min={0} max={100} value={addForm.progress} onChange={(e) => setAddForm({ ...addForm, progress: Number(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="0 - 100" />
+          </div>
+          <div className="flex items-center gap-2 md:col-span-2">
+            <input type="checkbox" id="add-completed" checked={addForm.completed} onChange={(e) => setAddForm({ ...addForm, completed: e.target.checked })} className="w-4 h-4 text-gray-900 dark:text-dark-primary border-gray-300 rounded focus:ring-gray-400" />
+            <label htmlFor="add-completed" className="text-sm font-medium text-gray-700 dark:text-dark-secondary">Mark as completed</label>
+          </div>
+          <div className="md:col-span-2 flex gap-3 pt-2">
+            <button type="button" onClick={() => setIsAddOpen(false)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-dark-secondary bg-gray-100 dark:bg-dark-input rounded-lg hover:bg-gray-200 dark:hover:bg-dark-hover transition-colors">Cancel</button>
+            <button type="submit" className="flex-1 px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 transition-colors">Save Goal</button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={isEditOpen && !!editingGoal} onClose={() => { setIsEditOpen(false); setEditingGoal(null); }} title="Edit Goal" maxWidth="max-w-2xl">
+        <form onSubmit={handleUpdateGoal} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Title</label>
+            <input type="text" required value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="Goal title" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Description</label>
+            <textarea required value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" rows={3} placeholder="What does success look like?" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Category</label>
+            <input type="text" value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="e.g., Learning, Health" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Deadline</label>
+            <input type="date" value={editForm.deadline} onChange={(e) => setEditForm({ ...editForm, deadline: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Progress (%)</label>
+            <input type="number" min={0} max={100} value={editForm.progress} onChange={(e) => setEditForm({ ...editForm, progress: Number(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="0 - 100" />
+          </div>
+          <div className="flex items-center gap-2 md:col-span-2">
+            <input type="checkbox" id="edit-completed" checked={editForm.completed} onChange={(e) => setEditForm({ ...editForm, completed: e.target.checked })} className="w-4 h-4 text-gray-900 dark:text-dark-primary border-gray-300 rounded focus:ring-gray-400" />
+            <label htmlFor="edit-completed" className="text-sm font-medium text-gray-700 dark:text-dark-secondary">Mark as completed</label>
+          </div>
+          <div className="md:col-span-2 flex gap-3 pt-2">
+            <button type="button" onClick={() => { setIsEditOpen(false); setEditingGoal(null); }} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-dark-secondary bg-gray-100 dark:bg-dark-input rounded-lg hover:bg-gray-200 dark:hover:bg-dark-hover transition-colors">Cancel</button>
+            <button type="submit" className="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">Save Changes</button>
+          </div>
+        </form>
+      </Modal>
     </>
   );
 }

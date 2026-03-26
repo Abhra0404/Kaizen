@@ -20,9 +20,9 @@ export default class ErrorBoundary extends React.Component<Props, State> {
   render() {
     if (this.state.error) {
       return (
-        <div style={{ padding: 24, fontFamily: 'ui-sans-serif, system-ui', color: '#b91c1c' }}>
-          <h1 style={{ fontSize: 20, marginBottom: 8 }}>App crashed</h1>
-          <p style={{ whiteSpace: 'pre-wrap', color: '#111827' }}>{this.state.error.message}</p>
+        <div className="p-6 font-sans">
+          <h1 className="text-xl font-semibold text-red-700 dark:text-red-400 mb-2">App crashed</h1>
+          <p className="whitespace-pre-wrap text-gray-900 dark:text-dark-primary">{this.state.error.message}</p>
         </div>
       );
     }

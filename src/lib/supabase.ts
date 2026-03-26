@@ -5,12 +5,17 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string ?? '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error(
-    '[Kaizen] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY environment variables. ' +
-    'Add them in Vercel → Project → Settings → Environment Variables.'
+    '[Kaizen] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY environment variables.\n' +
+    '  • Local dev: copy .env.example → .env and fill in your Supabase credentials.\n' +
+    '  • Vercel: Project → Settings → Environment Variables → add both keys, then redeploy.'
   );
 }
 
+const isPlaceholder = !supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co';
+
 export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder'
+  isPlaceholder ? 'https://placeholder.supabase.co' : supabaseUrl,
+  isPlaceholder ? 'placeholder' : supabaseAnonKey
 );
+
+export const isSupabaseConfigured = !isPlaceholder;

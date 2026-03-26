@@ -18,12 +18,97 @@ body {
 }
 
 html.dark body {
-	background: #111827;
-	color: #f9fafb;
+	background: #121212;
+	color: #E0E0E0;
 }
+
+/* ---- Shared patterns ---- */
 .bg-grid-pattern {
-	background-image: 
+	background-image:
 		linear-gradient(to right, currentColor 1px, transparent 1px),
 		linear-gradient(to bottom, currentColor 1px, transparent 1px);
 	background-size: 40px 40px;
+}
+
+/* ---- Landing page animations ---- */
+@keyframes float {
+	0%, 100% { transform: translateY(0) translateX(0); }
+	50% { transform: translateY(-20px) translateX(10px); }
+}
+@keyframes marquee {
+	0% { transform: translateX(0); }
+	100% { transform: translateX(-50%); }
+}
+@keyframes fade-in-up {
+	from { opacity: 0; transform: translateY(24px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-float {
+	animation: float 8s ease-in-out infinite;
+}
+.animate-float-delayed {
+	animation: float 8s ease-in-out infinite 4s;
+}
+
+/* Infinite marquee — pauses on hover */
+.marquee-track {
+	display: flex;
+	width: max-content;
+	animation: marquee 40s linear infinite;
+}
+.marquee-track:hover {
+	animation-play-state: paused;
+}
+
+/* Intersection Observer reveal */
+.reveal {
+	opacity: 0;
+	transform: translateY(24px);
+}
+.reveal.revealed {
+	animation: fade-in-up 0.7s ease-out forwards;
+}
+
+/* Heading text shine — gradient clipped to text, dark mode only */
+@keyframes text-shine {
+	0%   { background-position: 200% center; }
+	100% { background-position: -200% center; }
+}
+html.dark .heading-shine {
+	background: linear-gradient(
+		120deg,
+		#E0E0E0 0%,
+		#E0E0E0 30%,
+		#ffffff 48%,
+		#ffffff 52%,
+		#E0E0E0 70%,
+		#E0E0E0 100%
+	);
+	background-size: 300% 100%;
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: text-shine 4s linear infinite;
+}
+
+/* ---- Accessibility: respect reduced-motion preference ---- */
+@media (prefers-reduced-motion: reduce) {
+	.animate-float,
+	.animate-float-delayed {
+		animation: none;
+	}
+	.marquee-track {
+		animation: none;
+	}
+	html.dark .heading-shine {
+		animation: none;
+	}
+	.reveal {
+		opacity: 1;
+		transform: none;
+	}
+	.reveal.revealed {
+		animation: none;
+	}
 }

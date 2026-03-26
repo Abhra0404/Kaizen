@@ -32,6 +32,9 @@ export default function WeeklyProgress({
   footerSummary = '290 problems solved',
   trendLabel = '+28% this month',
 }: WeeklyProgressProps) {
+  const isDark = document.documentElement.classList.contains('dark');
+  const tickColor = isDark ? '#888888' : '#6b7280';
+  const gridColor = isDark ? 'rgba(68,68,68,0.4)' : 'rgba(107,114,128,0.15)';
 
   const data = {
     labels: weeklyData.map(d => d.week),
@@ -40,12 +43,12 @@ export default function WeeklyProgress({
         label: 'Problems solved',
         data: weeklyData.map(d => d.value),
         fill: true,
-        borderColor: 'rgba(59,130,246,1)',
-        backgroundColor: 'rgba(59,130,246,0.15)',
+        borderColor: 'rgba(16,185,129,1)',
+        backgroundColor: 'rgba(16,185,129,0.15)',
         tension: 0.35,
         pointRadius: 4,
-        pointBackgroundColor: '#fff',
-        pointBorderColor: 'rgba(59,130,246,1)',
+        pointBackgroundColor: isDark ? '#1e1e1e' : '#fff',
+        pointBorderColor: 'rgba(16,185,129,1)',
       },
     ],
   };
@@ -57,26 +60,26 @@ export default function WeeklyProgress({
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: (ctx: any) => `${ctx.parsed.y} problems`,
+          label: (ctx: { parsed: { y: number } }) => `${ctx.parsed.y} problems`,
         },
       },
     },
     scales: {
       x: {
         grid: { display: false },
-        ticks: { color: '#6b7280' },
+        ticks: { color: tickColor },
       },
       y: {
-        grid: { color: 'rgba(107,114,128,0.15)' },
-        ticks: { color: '#6b7280', precision: 0 },
+        grid: { color: gridColor },
+        ticks: { color: tickColor, precision: 0 },
         beginAtZero: true,
       },
     },
   } as const;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors hover:shadow-lg duration-300">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">{title}</h3>
+    <div className="bg-white dark:bg-dark-card rounded-xl p-6 shadow-sm border border-gray-100 dark:border-dark-border transition-colors hover:shadow-lg duration-300">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-primary mb-6">{title}</h3>
 
       <div className="flex flex-col gap-6">
         <div className="h-36">
@@ -86,18 +89,18 @@ export default function WeeklyProgress({
         <div className="grid grid-cols-4 gap-4 text-center">
           {weeklyData.map((item, index) => (
             <div key={index}>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{item.week}</p>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">{item.value}</p>
+              <p className="text-xs text-gray-600 dark:text-dark-muted mb-1">{item.week}</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-dark-primary">{item.value}</p>
             </div>
           ))}
         </div>
 
-        <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <div className="pt-4 border-t border-gray-100 dark:border-dark-border flex items-center justify-between">
           <div className="flex items-center gap-2 text-green-500">
             <TrendingUp size={18} />
             <span className="text-sm font-semibold">{trendLabel}</span>
           </div>
-          <span className="text-sm text-gray-600 dark:text-gray-400">{footerSummary}</span>
+          <span className="text-sm text-gray-600 dark:text-dark-muted">{footerSummary}</span>
         </div>
       </div>
     </div>

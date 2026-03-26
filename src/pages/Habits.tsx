@@ -1,49 +1,23 @@
-import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext';
-
-type Habit = {
-  id: string;
-  name: string;
-  frequency: 'Daily' | 'Weekly';
-  streak: number;
-};
+import { Check, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useHabits } from '@/hooks/useHabits';
+import { FREQUENCIES } from '@/constants';
+import type { Frequency, Habit } from '@/types';
+import Spinner from '@/components/ui/Spinner';
+import PageHeader from '@/components/ui/PageHeader';
+import StatCard from '@/components/ui/StatCard';
+import Modal from '@/components/ui/Modal';
+import EmptyState from '@/components/ui/EmptyState';
+import ErrorBanner from '@/components/ui/ErrorBanner';
 
 export default function Habits() {
-  const { user } = useAuth();
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const [dbLoading, setDbLoading] = useState(true);
+  const { habits, loading, error, clearError, addHabit, updateHabit, removeHabit, incrementStreak } = useHabits();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    frequency: 'Daily' as 'Daily' | 'Weekly',
-    streak: 0,
-  });
+  const [formData, setFormData] = useState({ name: '', frequency: 'Daily' as Frequency, streak: 0 });
 
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
-  const [editFormData, setEditFormData] = useState({
-    name: '',
-    frequency: 'Daily' as 'Daily' | 'Weekly',
-    streak: 0,
-  });
-
-  // Fetch habits from Supabase on mount
-  useEffect(() => {
-    if (!user) return;
-    setDbLoading(true);
-    supabase
-      .from('habits')
-      .select('id, name, frequency, streak')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) console.error('Failed to load habits', error);
-        else setHabits((data as Habit[]) ?? []);
-        setDbLoading(false);
-      });
-  }, [user]);
+  const [editFormData, setEditFormData] = useState({ name: '', frequency: 'Daily' as Frequency, streak: 0 });
 
   const stats = useMemo(() => {
     const active = habits.length;
@@ -55,31 +29,9 @@ export default function Habits() {
 
   const handleAddHabit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-    const { data, error } = await supabase
-      .from('habits')
-      .insert({ ...formData, user_id: user.id })
-      .select('id, name, frequency, streak')
-      .single();
-    if (error) { console.error('Failed to add habit', error); return; }
-    setHabits(prev => [data as Habit, ...prev]);
+    await addHabit(formData);
     setIsModalOpen(false);
     setFormData({ name: '', frequency: 'Daily', streak: 0 });
-  };
-
-  const handleDeleteHabit = async (id: string) => {
-    const { error } = await supabase.from('habits').delete().eq('id', id);
-    if (error) { console.error('Failed to delete habit', error); return; }
-    setHabits(prev => prev.filter(h => h.id !== id));
-  };
-
-  const handleIncrementStreak = async (id: string) => {
-    const habit = habits.find(h => h.id === id);
-    if (!habit) return;
-    const newStreak = habit.streak + 1;
-    const { error } = await supabase.from('habits').update({ streak: newStreak }).eq('id', id);
-    if (error) { console.error('Failed to update streak', error); return; }
-    setHabits(prev => prev.map(h => h.id === id ? { ...h, streak: newStreak } : h));
   };
 
   const startEditHabit = (habit: Habit) => {
@@ -90,53 +42,35 @@ export default function Habits() {
   const handleUpdateHabit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingHabit) return;
-    const { error } = await supabase
-      .from('habits')
-      .update(editFormData)
-      .eq('id', editingHabit.id);
-    if (error) { console.error('Failed to update habit', error); return; }
-    setHabits(prev => prev.map(h => h.id === editingHabit.id ? { ...h, ...editFormData } : h));
+    await updateHabit(editingHabit.id, editFormData);
     setEditingHabit(null);
   };
 
   return (
     <>
-      <div className="mb-10">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">My Habits</h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">Build and track consistent habits for growth</p>
-      </div>
+      <PageHeader title="My Habits" subtitle="Build and track consistent habits for growth" />
+
+      <ErrorBanner message={error} onDismiss={clearError} />
 
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">Habit Snapshot</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Daily momentum at a glance</p>
+        <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-dark-primary">Habit Snapshot</h2>
+        <p className="text-sm text-gray-500 dark:text-dark-muted">Daily momentum at a glance</p>
       </div>
 
-      {dbLoading ? (
-        <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 dark:border-gray-700 dark:border-t-white rounded-full animate-spin" /></div>
+      {loading ? (
+        <Spinner className="py-12" />
       ) : (<>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Active Habits</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.active}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Daily Habits</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.dailyCount}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Streak Days</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalStreak}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Best Streak</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.bestStreak} days</p>
-        </div>
+        <StatCard label="Active Habits" value={stats.active} />
+        <StatCard label="Daily Habits" value={stats.dailyCount} />
+        <StatCard label="Total Streak Days" value={stats.totalStreak} />
+        <StatCard label="Best Streak" value={`${stats.bestStreak} days`} />
       </div>
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide">Routines</p>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Active Habits</h2>
+          <p className="text-sm text-gray-500 dark:text-dark-muted uppercase tracking-wide">Routines</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-dark-primary">Active Habits</h2>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
@@ -149,202 +83,96 @@ export default function Habits() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {habits.map((habit) => (
-          <div key={habit.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 transition-colors">
+          <div key={habit.id} className="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl p-6 transition-colors">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{habit.name}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{habit.frequency}</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-primary mb-1">{habit.name}</h3>
+                <p className="text-sm text-gray-600 dark:text-dark-muted">{habit.frequency}</p>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => startEditHabit(habit)}
-                  className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
-                  aria-label="Edit habit"
-                >
+                <button onClick={() => startEditHabit(habit)} className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors" aria-label="Edit habit">
                   <Pencil size={18} className="text-indigo-600 dark:text-indigo-300" />
                 </button>
-                <button
-                  onClick={() => handleIncrementStreak(habit.id)}
-                  className="p-2 bg-green-50 dark:bg-green-900/30 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
-                  aria-label="Increment streak"
-                >
+                <button onClick={() => incrementStreak(habit.id)} className="p-2 bg-green-50 dark:bg-green-900/30 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors" aria-label="Increment streak">
                   <Check size={18} className="text-green-600 dark:text-green-400" />
                 </button>
-                <button
-                  onClick={() => handleDeleteHabit(habit.id)}
-                  className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                  aria-label="Delete habit"
-                >
+                <button onClick={() => removeHabit(habit.id)} className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" aria-label="Delete habit">
                   <Trash2 size={18} />
                 </button>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">{habit.streak}</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">day streak</span>
+              <span className="text-2xl font-bold text-gray-900 dark:text-dark-primary">{habit.streak}</span>
+              <span className="text-sm text-gray-600 dark:text-dark-muted">day streak</span>
             </div>
 
-            <div className="mt-4 flex gap-1">
-              {[...Array(7)].map((_, i) => (
+            <div className="mt-4">
+              <div className="w-full bg-gray-200 dark:bg-dark-input rounded-full h-2">
                 <div
-                  key={i}
-                  className={`flex-1 h-2 rounded-full ${i < Math.min(habit.streak % 8, 7) ? 'bg-indigo-500 dark:bg-indigo-400' : 'bg-gray-200 dark:bg-gray-700'}`}
-                ></div>
-              ))}
+                  className="h-2 rounded-full bg-indigo-500 dark:bg-indigo-400 transition-all"
+                  style={{ width: `${Math.min(100, (habit.streak / Math.max(habit.streak, 30)) * 100)}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-dark-muted mt-2">
+                {habit.streak > 0
+                  ? `${habit.streak} day${habit.streak === 1 ? '' : 's'} — keep it going!`
+                  : 'Tap the check to start your streak'}
+              </p>
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Last 7 check-ins (visual)</p>
           </div>
         ))}
 
         {habits.length === 0 && (
-          <div className="col-span-full bg-white dark:bg-gray-800 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-6 text-center text-gray-600 dark:text-gray-400">
-            No habits yet. Click "New Habit" to create your first one.
-          </div>
+          <EmptyState message='No habits yet. Click "New Habit" to create your first one.' className="col-span-full" />
         )}
       </div>
 
-      {/* Add Habit Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">New Habit</h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddHabit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Habit name</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="e.g., Morning Coding Session"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Frequency</label>
-                <select
-                  value={formData.frequency}
-                  onChange={(e) => setFormData({ ...formData, frequency: e.target.value as 'Daily' | 'Weekly' })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                >
-                  <option value="Daily">Daily</option>
-                  <option value="Weekly">Weekly</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Starting streak</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={formData.streak}
-                  onChange={(e) => setFormData({ ...formData, streak: Number(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 transition-colors"
-                >
-                  Save Habit
-                </button>
-              </div>
-            </form>
+      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title="New Habit">
+        <form onSubmit={handleAddHabit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Habit name</label>
+            <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="e.g., Morning Coding Session" />
           </div>
-        </div>
-      )}
-
-      {/* Edit Habit Modal */}
-      {editingHabit && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Edit Habit</h3>
-              <button
-                onClick={() => setEditingHabit(null)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdateHabit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Habit name</label>
-                <input
-                  type="text"
-                  required
-                  value={editFormData.name}
-                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="e.g., Morning Coding Session"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Frequency</label>
-                <select
-                  value={editFormData.frequency}
-                  onChange={(e) => setEditFormData({ ...editFormData, frequency: e.target.value as 'Daily' | 'Weekly' })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                >
-                  <option value="Daily">Daily</option>
-                  <option value="Weekly">Weekly</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Streak</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={editFormData.streak}
-                  onChange={(e) => setEditFormData({ ...editFormData, streak: Number(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setEditingHabit(null)}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Frequency</label>
+            <select value={formData.frequency} onChange={(e) => setFormData({ ...formData, frequency: e.target.value as Frequency })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+              {FREQUENCIES.map((f) => <option key={f} value={f}>{f}</option>)}
+            </select>
           </div>
-        </div>
-      )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Starting streak</label>
+            <input type="number" min={0} value={formData.streak} onChange={(e) => setFormData({ ...formData, streak: Number(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="0" />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-dark-secondary bg-gray-100 dark:bg-dark-input rounded-lg hover:bg-gray-200 dark:hover:bg-dark-hover transition-colors">Cancel</button>
+            <button type="submit" className="flex-1 px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 transition-colors">Save Habit</button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={!!editingHabit} onClose={() => setEditingHabit(null)} title="Edit Habit">
+        <form onSubmit={handleUpdateHabit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Habit name</label>
+            <input type="text" required value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="e.g., Morning Coding Session" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Frequency</label>
+            <select value={editFormData.frequency} onChange={(e) => setEditFormData({ ...editFormData, frequency: e.target.value as Frequency })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+              {FREQUENCIES.map((f) => <option key={f} value={f}>{f}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Streak</label>
+            <input type="number" min={0} value={editFormData.streak} onChange={(e) => setEditFormData({ ...editFormData, streak: Number(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="0" />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <button type="button" onClick={() => setEditingHabit(null)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-dark-secondary bg-gray-100 dark:bg-dark-input rounded-lg hover:bg-gray-200 dark:hover:bg-dark-hover transition-colors">Cancel</button>
+            <button type="submit" className="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">Save Changes</button>
+          </div>
+        </form>
+      </Modal>
       </>)}
     </>
   );

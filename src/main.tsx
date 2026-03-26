@@ -1,32 +1,22 @@
 import { StrictMode } from 'react';
-// import { BrowserRouter } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import ErrorBoundary from '@/ErrorBoundary';
+import App from '@/App';
 import './index.css';
-import ErrorBoundary from './ErrorBoundary';
-import { HashRouter } from "react-router-dom";
-import { AuthProvider } from './contexts/AuthContext';
 
-
-console.log('main.tsx loaded');
-
-try {
-  const rootElement = document.getElementById('root');
-  console.log('root element:', rootElement);
-  
-  createRoot(rootElement!).render(
-    <StrictMode>
-      <HashRouter>
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <ThemeProvider>
+      <BrowserRouter>
         <AuthProvider>
           <ErrorBoundary>
             <App />
           </ErrorBoundary>
         </AuthProvider>
-      </HashRouter>
-    </StrictMode>
-  );
-  console.log('App rendered successfully');
-} catch (error) {
-  console.error('Error rendering app:', error);
-  document.body.innerHTML = `<h1 style="color: red; padding: 20px;">Error: ${error instanceof Error ? error.message : String(error)}</h1>`;
-}
+      </BrowserRouter>
+    </ThemeProvider>
+  </StrictMode>,
+);

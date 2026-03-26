@@ -1,4 +1,3 @@
-import { ChevronDown } from 'lucide-react';
 import {
   Chart as ChartJS,
   BarElement,
@@ -34,6 +33,9 @@ export default function ChartCard({
   ],
   totalLabel = 'Total: 498 problems',
 }: ChartCardProps) {
+  const isDark = document.documentElement.classList.contains('dark');
+  const tickColor = isDark ? '#888888' : '#6b7280';
+  const gridColor = isDark ? 'rgba(68,68,68,0.4)' : 'rgba(107,114,128,0.15)';
 
   const chartData = {
     labels: points.map(d => d.day),
@@ -56,7 +58,7 @@ export default function ChartCard({
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: (ctx: any) => `${ctx.parsed.y} problems`,
+          label: (ctx: { parsed: { y: number } }) => `${ctx.parsed.y} problems`,
         },
       },
     },
@@ -64,13 +66,13 @@ export default function ChartCard({
       x: {
         grid: { display: false },
         ticks: {
-          color: '#6b7280',
+          color: tickColor,
         },
       },
       y: {
-        grid: { color: 'rgba(107,114,128,0.15)' },
+        grid: { color: gridColor },
         ticks: {
-          color: '#6b7280',
+          color: tickColor,
           precision: 0,
         },
       },
@@ -78,34 +80,24 @@ export default function ChartCard({
   } as const;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-all">
-            7D
-          </button>
-          <button className="px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-all">
-            30D
-          </button>
-        </div>
+    <div className="bg-white dark:bg-dark-card rounded-xl p-6 border border-gray-200 dark:border-dark-border hover:border-gray-300 dark:hover:border-dark-accent transition-all duration-300">
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-primary">{title}</h3>
+        <p className="text-sm text-gray-500 dark:text-dark-muted mt-1">{subtitle}</p>
       </div>
 
       <div className="h-72">
         <Bar data={chartData} options={options} />
       </div>
-      
-      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+
+      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-dark-border flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-            <span className="text-xs text-gray-600 dark:text-gray-400">Completed</span>
+            <span className="text-xs text-gray-600 dark:text-dark-muted">Completed</span>
           </div>
         </div>
-        <span className="text-xs text-gray-500 dark:text-gray-400">{totalLabel}</span>
+        <span className="text-xs text-gray-500 dark:text-dark-muted">{totalLabel}</span>
       </div>
     </div>
   );
