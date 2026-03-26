@@ -36,6 +36,8 @@ export type Project = {
   progress: number;
   team: string[];
   tags: string[];
+  github_url: string;
+  live_url: string;
 };
 
 // ── Goals ──

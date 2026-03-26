@@ -483,7 +483,7 @@ export default function Landing() {
 
       {/* -------- Footer -------- */}
       <footer
-        className="relative z-10 bg-black dark:bg-dark-surface border-t border-gray-800 dark:border-dark-border"
+        className="relative z-10 bg-black border-t border-gray-800"
         role="contentinfo"
       >
         {/* Main footer content */}
@@ -492,15 +492,15 @@ export default function Landing() {
             {/* Brand column — spans 6 cols */}
             <div className="md:col-span-6 space-y-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-lg bg-white dark:bg-white flex items-center justify-center text-gray-900 dark:text-gray-900 shadow-sm">
+                <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-gray-900 shadow-sm">
                   <Zap size={20} className="fill-current" />
                 </div>
                 <div>
-                  <span className="font-bold text-lg tracking-tight text-white dark:text-dark-primary">Kaizen</span>
-                  <p className="text-xs text-gray-400 dark:text-dark-muted leading-tight">Productivity Suite</p>
+                  <span className="font-bold text-lg tracking-tight text-white">Kaizen</span>
+                  <p className="text-xs text-gray-400 leading-tight">Productivity Suite</p>
                 </div>
               </div>
-              <p className="text-sm text-gray-400 dark:text-dark-muted leading-relaxed max-w-sm">
+              <p className="text-sm text-gray-400 leading-relaxed max-w-sm">
                 Improve 1% today. Repeat tomorrow. A minimalist dashboard for students to track
                 DSA progress, habits, projects, and goals.
               </p>
@@ -509,14 +509,14 @@ export default function Landing() {
                   href={GITHUB_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-lg border border-gray-800 dark:border-dark-border flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-white dark:hover:text-dark-primary hover:border-gray-600 dark:hover:border-dark-accent hover:bg-gray-900 dark:hover:bg-dark-hover transition-all duration-200"
+                  className="w-9 h-9 rounded-lg border border-gray-800 flex items-center justify-center text-gray-500 hover:text-white hover:border-gray-600 hover:bg-gray-900 transition-all duration-200"
                   aria-label="Kaizen on GitHub"
                 >
                   <Github size={16} />
                 </a>
                 <a
                   href="mailto:contact@kaizen.app"
-                  className="w-9 h-9 rounded-lg border border-gray-800 dark:border-dark-border flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-white dark:hover:text-dark-primary hover:border-gray-600 dark:hover:border-dark-accent hover:bg-gray-900 dark:hover:bg-dark-hover transition-all duration-200"
+                  className="w-9 h-9 rounded-lg border border-gray-800 flex items-center justify-center text-gray-500 hover:text-white hover:border-gray-600 hover:bg-gray-900 transition-all duration-200"
                   aria-label="Email us"
                 >
                   <Mail size={16} />
@@ -526,20 +526,20 @@ export default function Landing() {
 
             {/* Account column */}
             <div className="md:col-span-3 space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white dark:text-dark-primary">Account</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-white">Account</h3>
               <ul className="space-y-2.5">
                 <li>
-                  <Link to="/login" className="text-sm text-gray-400 dark:text-dark-muted hover:text-white dark:hover:text-dark-primary transition-colors">
+                  <Link to="/login" className="text-sm text-gray-400 hover:text-white transition-colors">
                     Log In
                   </Link>
                 </li>
                 <li>
-                  <Link to="/signup" className="text-sm text-gray-400 dark:text-dark-muted hover:text-white dark:hover:text-dark-primary transition-colors">
+                  <Link to="/signup" className="text-sm text-gray-400 hover:text-white transition-colors">
                     Register
                   </Link>
                 </li>
                 <li>
-                  <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 dark:text-dark-muted hover:text-white dark:hover:text-dark-primary transition-colors">
+                  <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-white transition-colors">
                     GitHub
                   </a>
                 </li>
@@ -548,12 +548,12 @@ export default function Landing() {
 
             {/* Built with column */}
             <div className="md:col-span-3 space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white dark:text-dark-primary">Built with</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-white">Built with</h3>
               <div className="flex flex-wrap gap-2">
                 {TECH_STACK.map((tech) => (
                   <span
                     key={tech}
-                    className="px-3 py-1 text-xs font-medium text-gray-400 dark:text-dark-muted bg-gray-900 dark:bg-dark-card border border-gray-800 dark:border-dark-border rounded-md"
+                    className="px-3 py-1 text-xs font-medium text-gray-400 bg-gray-900 border border-gray-800 rounded-md"
                   >
                     {tech}
                   </span>
@@ -564,12 +564,12 @@ export default function Landing() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-gray-800 dark:border-dark-border">
+        <div className="border-t border-gray-800">
           <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-gray-500 dark:text-dark-muted">
+            <p className="text-xs text-gray-500">
               &copy; {new Date().getFullYear()} Kaizen. All rights reserved.
             </p>
-            <p className="text-xs text-gray-500 dark:text-dark-muted">
+            <p className="text-xs text-gray-500">
               Made with dedication for continuous improvement.
             </p>
           </div>

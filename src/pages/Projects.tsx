@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { ExternalLink, Github, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useProjects } from '@/hooks/useProjects';
 import { PROJECT_STATUSES } from '@/constants';
@@ -17,8 +17,8 @@ export default function Projects() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
-  const [addForm, setAddForm] = useState({ name: '', description: '', status: 'Planning' as ProjectStatus, progress: 0, team: '', tags: '' });
-  const [editForm, setEditForm] = useState({ name: '', description: '', status: 'Planning' as ProjectStatus, progress: 0, team: '', tags: '' });
+  const [addForm, setAddForm] = useState({ name: '', description: '', status: 'Planning' as ProjectStatus, progress: 0, team: '', tags: '', github_url: '', live_url: '' });
+  const [editForm, setEditForm] = useState({ name: '', description: '', status: 'Planning' as ProjectStatus, progress: 0, team: '', tags: '', github_url: '', live_url: '' });
 
   const stats = useMemo(() => {
     const total = projects.length;
@@ -37,9 +37,11 @@ export default function Projects() {
       progress: Math.min(100, Math.max(0, addForm.progress)),
       team: addForm.team.split(',').map(t => t.trim()).filter(Boolean),
       tags: addForm.tags.split(',').map(t => t.trim()).filter(Boolean),
+      github_url: addForm.github_url.trim(),
+      live_url: addForm.live_url.trim(),
     });
     setIsAddOpen(false);
-    setAddForm({ name: '', description: '', status: 'Planning', progress: 0, team: '', tags: '' });
+    setAddForm({ name: '', description: '', status: 'Planning', progress: 0, team: '', tags: '', github_url: '', live_url: '' });
   };
 
   const openEditProject = (project: Project) => {
@@ -51,6 +53,8 @@ export default function Projects() {
       progress: project.progress,
       team: project.team.join(', '),
       tags: project.tags.join(', '),
+      github_url: project.github_url || '',
+      live_url: project.live_url || '',
     });
     setIsEditOpen(true);
   };
@@ -65,6 +69,8 @@ export default function Projects() {
       progress: Math.min(100, Math.max(0, editForm.progress)),
       team: editForm.team.split(',').map(t => t.trim()).filter(Boolean),
       tags: editForm.tags.split(',').map(t => t.trim()).filter(Boolean),
+      github_url: editForm.github_url.trim(),
+      live_url: editForm.live_url.trim(),
     });
     setIsEditOpen(false);
     setEditingProject(null);
@@ -141,6 +147,33 @@ export default function Projects() {
                 <span key={tag} className="px-2 py-1 bg-gray-100 dark:bg-dark-input text-gray-700 dark:text-dark-secondary rounded-md text-xs font-medium">{tag}</span>
               ))}
             </div>
+
+            {(project.github_url || project.live_url) && (
+              <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-dark-border">
+                {project.github_url && (
+                  <a
+                    href={project.github_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-dark-muted hover:text-gray-900 dark:hover:text-dark-primary transition-colors"
+                  >
+                    <Github size={16} />
+                    GitHub
+                  </a>
+                )}
+                {project.live_url && (
+                  <a
+                    href={project.live_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-dark-muted hover:text-gray-900 dark:hover:text-dark-primary transition-colors"
+                  >
+                    <ExternalLink size={16} />
+                    Live Demo
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         ))}
 
@@ -167,7 +200,7 @@ export default function Projects() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Progress (%)</label>
-            <input type="number" min={0} max={100} value={addForm.progress} onChange={(e) => setAddForm({ ...addForm, progress: Number(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="0 - 100" />
+            <input type="text" inputMode="numeric" value={addForm.progress} onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); setAddForm({ ...addForm, progress: Math.min(100, parseInt(v) || 0) }); }} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="0 - 100" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Team (comma separated)</label>
@@ -176,6 +209,14 @@ export default function Projects() {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Tags (comma separated)</label>
             <input type="text" value={addForm.tags} onChange={(e) => setAddForm({ ...addForm, tags: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="React, Node.js, MongoDB" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">GitHub URL</label>
+            <input type="url" value={addForm.github_url} onChange={(e) => setAddForm({ ...addForm, github_url: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="https://github.com/user/repo" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Live Demo URL</label>
+            <input type="url" value={addForm.live_url} onChange={(e) => setAddForm({ ...addForm, live_url: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="https://myproject.vercel.app" />
           </div>
           <div className="md:col-span-2 flex gap-3 pt-2">
             <button type="button" onClick={() => setIsAddOpen(false)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-dark-secondary bg-gray-100 dark:bg-dark-input rounded-lg hover:bg-gray-200 dark:hover:bg-dark-hover transition-colors">Cancel</button>
@@ -202,7 +243,7 @@ export default function Projects() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Progress (%)</label>
-            <input type="number" min={0} max={100} value={editForm.progress} onChange={(e) => setEditForm({ ...editForm, progress: Number(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="0 - 100" />
+            <input type="text" inputMode="numeric" value={editForm.progress} onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); setEditForm({ ...editForm, progress: Math.min(100, parseInt(v) || 0) }); }} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="0 - 100" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Team (comma separated)</label>
@@ -211,6 +252,14 @@ export default function Projects() {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Tags (comma separated)</label>
             <input type="text" value={editForm.tags} onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="React, Node.js, MongoDB" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">GitHub URL</label>
+            <input type="url" value={editForm.github_url} onChange={(e) => setEditForm({ ...editForm, github_url: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="https://github.com/user/repo" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Live Demo URL</label>
+            <input type="url" value={editForm.live_url} onChange={(e) => setEditForm({ ...editForm, live_url: e.target.value })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="https://myproject.vercel.app" />
           </div>
           <div className="md:col-span-2 flex gap-3 pt-2">
             <button type="button" onClick={() => { setIsEditOpen(false); setEditingProject(null); }} className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-dark-secondary bg-gray-100 dark:bg-dark-input rounded-lg hover:bg-gray-200 dark:hover:bg-dark-hover transition-colors">Cancel</button>

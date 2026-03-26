@@ -58,6 +58,10 @@ html.dark body {
 	from { opacity: 0; transform: translateY(24px); }
 	to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes fade-in {
+	from { opacity: 0; transform: translateY(12px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
 
 .animate-float {
 	animation: float 8s ease-in-out infinite;
@@ -73,6 +77,12 @@ html.dark body {
 }
 .animate-float-gentle {
 	animation: float-gentle 12s ease-in-out infinite;
+}
+
+/* Auth page staggered entrance */
+.animate-fade-in {
+	opacity: 0;
+	animation: fade-in 0.5s ease-out forwards;
 }
 
 /* Infinite marquee — pauses on hover */
@@ -101,6 +111,7 @@ html.dark body {
 }
 .heading-shine {
 	display: inline-block;
+	padding-bottom: 0.15em;
 	background: linear-gradient(
 		120deg,
 		#111827 0%,
@@ -154,6 +165,10 @@ html.dark .heading-shine {
 		transform: none;
 	}
 	.reveal.revealed {
+		animation: none;
+	}
+	.animate-fade-in {
+		opacity: 1;
 		animation: none;
 	}
 }

@@ -87,8 +87,14 @@ CREATE TABLE IF NOT EXISTS projects (
   progress    INTEGER NOT NULL DEFAULT 0 CHECK (progress BETWEEN 0 AND 100),
   team        TEXT[] NOT NULL DEFAULT '{}',
   tags        TEXT[] NOT NULL DEFAULT '{}',
+  github_url  TEXT NOT NULL DEFAULT '',
+  live_url    TEXT NOT NULL DEFAULT '',
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Add columns if upgrading from older schema (safe if already exist)
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS github_url TEXT NOT NULL DEFAULT '';
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS live_url TEXT NOT NULL DEFAULT '';
 
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 

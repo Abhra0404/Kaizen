@@ -44,6 +44,6 @@ export const TABLES = {
 export const SELECT_COLUMNS = {
   DSA_PROBLEMS: 'id, title, difficulty, topic, solved, date, source, leetcode_slug',
   HABITS: 'id, name, frequency, streak',
-  PROJECTS: 'id, name, description, status, progress, team, tags',
+  PROJECTS: 'id, name, description, status, progress, team, tags, github_url, live_url',
   GOALS: 'id, title, description, progress, deadline, category, completed',
 } as const;

@@ -197,7 +197,7 @@ export default function Goals() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Progress (%)</label>
-            <input type="number" min={0} max={100} value={addForm.progress} onChange={(e) => setAddForm({ ...addForm, progress: Number(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="0 - 100" />
+            <input type="text" inputMode="numeric" value={addForm.progress} onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); setAddForm({ ...addForm, progress: Math.min(100, parseInt(v) || 0) }); }} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="0 - 100" />
           </div>
           <div className="flex items-center gap-2 md:col-span-2">
             <input type="checkbox" id="add-completed" checked={addForm.completed} onChange={(e) => setAddForm({ ...addForm, completed: e.target.checked })} className="w-4 h-4 text-gray-900 dark:text-dark-primary border-gray-300 rounded focus:ring-gray-400" />
@@ -230,7 +230,7 @@ export default function Goals() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">Progress (%)</label>
-            <input type="number" min={0} max={100} value={editForm.progress} onChange={(e) => setEditForm({ ...editForm, progress: Number(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="0 - 100" />
+            <input type="text" inputMode="numeric" value={editForm.progress} onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); setEditForm({ ...editForm, progress: Math.min(100, parseInt(v) || 0) }); }} className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent" placeholder="0 - 100" />
           </div>
           <div className="flex items-center gap-2 md:col-span-2">
             <input type="checkbox" id="edit-completed" checked={editForm.completed} onChange={(e) => setEditForm({ ...editForm, completed: e.target.checked })} className="w-4 h-4 text-gray-900 dark:text-dark-primary border-gray-300 rounded focus:ring-gray-400" />

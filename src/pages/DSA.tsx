@@ -65,9 +65,9 @@ export default function DSA() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         <StatCard label="Problems Solved" value={solvedCount} subtext={`of ${totalCount} total`} />
-        <StatCard label="Easy" value={easyCount} subtext={`${totalCount ? Math.round((easyCount / totalCount) * 100) : 0}% of total`} />
-        <StatCard label="Medium" value={mediumCount} subtext={`${totalCount ? Math.round((mediumCount / totalCount) * 100) : 0}% of total`} />
-        <StatCard label="Hard" value={hardCount} subtext={`${totalCount ? Math.round((hardCount / totalCount) * 100) : 0}% of total`} />
+        <StatCard label="Easy" value={easyCount} subtext={`${totalCount ? Math.round((easyCount / totalCount) * 100) : 0}% of total`} labelColor="text-green-600 dark:text-green-400" valueColor="text-green-600 dark:text-green-400" />
+        <StatCard label="Medium" value={mediumCount} subtext={`${totalCount ? Math.round((mediumCount / totalCount) * 100) : 0}% of total`} labelColor="text-orange-600 dark:text-orange-400" valueColor="text-orange-600 dark:text-orange-400" />
+        <StatCard label="Hard" value={hardCount} subtext={`${totalCount ? Math.round((hardCount / totalCount) * 100) : 0}% of total`} labelColor="text-red-600 dark:text-red-400" valueColor="text-red-600 dark:text-red-400" />
       </div>
 
       <div className="bg-white dark:bg-dark-card rounded-xl p-6 shadow-sm border border-gray-100 dark:border-dark-border transition-colors">
