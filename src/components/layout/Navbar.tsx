@@ -43,7 +43,10 @@ export default function Navbar({ onToggleSidebar }: NavbarProps) {
         >
           {isDark ? <Sun size={18} className="text-gray-400" /> : <Moon size={18} className="text-gray-700" />}
         </button>
-        <div className="flex items-center gap-2 ml-1 pl-2 border-l border-gray-200 dark:border-dark-border">
+        <Link
+          to="/settings"
+          className="flex items-center gap-2 ml-1 pl-2 border-l border-gray-200 dark:border-dark-border hover:opacity-80 transition-opacity cursor-pointer"
+        >
           <p className="text-sm font-semibold text-gray-900 dark:text-dark-primary hidden sm:block">{firstName}</p>
           <div className="w-9 h-9 rounded-lg overflow-hidden shadow-sm shrink-0">
             {avatarUrl ? (
@@ -54,7 +57,7 @@ export default function Navbar({ onToggleSidebar }: NavbarProps) {
               </div>
             )}
           </div>
-        </div>
+        </Link>
       </div>
     </nav>
   );

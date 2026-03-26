@@ -1,162 +1,359 @@
 -- ============================================================
--- Kaizen – Supabase Database Schema
--- Run this in the Supabase SQL Editor (Dashboard → SQL Editor)
+-- Kaizen – Complete Supabase Database Schema (Idempotent)
+-- Safe to run multiple times — all statements handle "already exists"
+-- Run this in Supabase Dashboard → SQL Editor
 -- ============================================================
+--
+-- PREREQUISITES:
+--   1. Enable pg_cron and pg_net from Dashboard → Database → Extensions
+--   2. Replace <YOUR_SERVICE_ROLE_KEY> below with your actual key
+--      (Dashboard → Settings → API → service_role secret)
+-- ============================================================
+
+-- ═══════════════════════════════════════════════════════════════
+-- PART 0: Verify extensions are enabled
+-- ═══════════════════════════════════════════════════════════════
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    RAISE EXCEPTION 'pg_cron is not enabled. Enable it from Dashboard → Database → Extensions first.';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_net') THEN
+    RAISE EXCEPTION 'pg_net is not enabled. Enable it from Dashboard → Database → Extensions first.';
+  END IF;
+END $$;
+
+-- ═══════════════════════════════════════════════════════════════
+-- PART 1: App Config Table (stores settings for pg_cron jobs)
+-- ═══════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS app_config (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
+-- Only postgres/service_role should read this (contains secrets)
+ALTER TABLE app_config ENABLE ROW LEVEL SECURITY;
+-- No RLS policies = no user access. Only service_role (bypasses RLS) and
+-- pg_cron (runs as postgres, bypasses RLS) can read.
+
+-- Upsert config values
+INSERT INTO app_config (key, value) VALUES
+  ('supabase_url',      'https://rbkliofzwotkwotuakqs.supabase.co'),
+  ('service_role_key',  '<YOUR_SERVICE_ROLE_KEY>'),
+  ('cron_secret',       'f92a485876a25176a399ef369ff32e114b6832b32f7e9b0a03960697dbef84ed')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+
+-- ═══════════════════════════════════════════════════════════════
+-- PART 2: Core Tables
+-- ═══════════════════════════════════════════════════════════════
 
 -- ── habits ────────────────────────────────────────────────
-create table if not exists habits (
-  id          uuid primary key default gen_random_uuid(),
-  user_id     uuid references auth.users(id) on delete cascade not null,
-  name        text not null,
-  frequency   text not null check (frequency in ('Daily', 'Weekly')),
-  streak      integer not null default 0,
-  created_at  timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS habits (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name        TEXT NOT NULL,
+  frequency   TEXT NOT NULL CHECK (frequency IN ('Daily', 'Weekly')),
+  streak      INTEGER NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-alter table habits enable row level security;
+ALTER TABLE habits ENABLE ROW LEVEL SECURITY;
 
-create policy "habits: user can select own" on habits
-  for select using (auth.uid() = user_id);
+DROP POLICY IF EXISTS "habits: user can select own" ON habits;
+CREATE POLICY "habits: user can select own" ON habits
+  FOR SELECT USING (auth.uid() = user_id);
 
-create policy "habits: user can insert own" on habits
-  for insert with check (auth.uid() = user_id);
+DROP POLICY IF EXISTS "habits: user can insert own" ON habits;
+CREATE POLICY "habits: user can insert own" ON habits
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-create policy "habits: user can update own" on habits
-  for update using (auth.uid() = user_id);
+DROP POLICY IF EXISTS "habits: user can update own" ON habits;
+CREATE POLICY "habits: user can update own" ON habits
+  FOR UPDATE USING (auth.uid() = user_id);
 
-create policy "habits: user can delete own" on habits
-  for delete using (auth.uid() = user_id);
+DROP POLICY IF EXISTS "habits: user can delete own" ON habits;
+CREATE POLICY "habits: user can delete own" ON habits
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- ── projects ──────────────────────────────────────────────
-create table if not exists projects (
-  id          uuid primary key default gen_random_uuid(),
-  user_id     uuid references auth.users(id) on delete cascade not null,
-  name        text not null,
-  description text not null default '',
-  status      text not null default 'Planning' check (status in ('Planning', 'In Progress', 'Review', 'Done')),
-  progress    integer not null default 0 check (progress between 0 and 100),
-  team        text[] not null default '{}',
-  tags        text[] not null default '{}',
-  created_at  timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS projects (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name        TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  status      TEXT NOT NULL DEFAULT 'Planning' CHECK (status IN ('Planning', 'In Progress', 'Review', 'Done')),
+  progress    INTEGER NOT NULL DEFAULT 0 CHECK (progress BETWEEN 0 AND 100),
+  team        TEXT[] NOT NULL DEFAULT '{}',
+  tags        TEXT[] NOT NULL DEFAULT '{}',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-alter table projects enable row level security;
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
-create policy "projects: user can select own" on projects
-  for select using (auth.uid() = user_id);
+DROP POLICY IF EXISTS "projects: user can select own" ON projects;
+CREATE POLICY "projects: user can select own" ON projects
+  FOR SELECT USING (auth.uid() = user_id);
 
-create policy "projects: user can insert own" on projects
-  for insert with check (auth.uid() = user_id);
+DROP POLICY IF EXISTS "projects: user can insert own" ON projects;
+CREATE POLICY "projects: user can insert own" ON projects
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-create policy "projects: user can update own" on projects
-  for update using (auth.uid() = user_id);
+DROP POLICY IF EXISTS "projects: user can update own" ON projects;
+CREATE POLICY "projects: user can update own" ON projects
+  FOR UPDATE USING (auth.uid() = user_id);
 
-create policy "projects: user can delete own" on projects
-  for delete using (auth.uid() = user_id);
+DROP POLICY IF EXISTS "projects: user can delete own" ON projects;
+CREATE POLICY "projects: user can delete own" ON projects
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- ── dsa_problems ─────────────────────────────────────────
-create table if not exists dsa_problems (
-  id          uuid primary key default gen_random_uuid(),
-  user_id     uuid references auth.users(id) on delete cascade not null,
-  title       text not null,
-  difficulty  text not null check (difficulty in ('Easy', 'Medium', 'Hard')),
-  topic       text not null default '',
-  solved      boolean not null default false,
-  date        date not null default current_date,
-  created_at  timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS dsa_problems (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  title         TEXT NOT NULL,
+  difficulty    TEXT NOT NULL CHECK (difficulty IN ('Easy', 'Medium', 'Hard')),
+  topic         TEXT NOT NULL DEFAULT '',
+  solved        BOOLEAN NOT NULL DEFAULT false,
+  date          DATE NOT NULL DEFAULT current_date,
+  source        TEXT NOT NULL DEFAULT 'manual',
+  leetcode_slug TEXT DEFAULT '',
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-alter table dsa_problems enable row level security;
+ALTER TABLE dsa_problems ENABLE ROW LEVEL SECURITY;
 
-create policy "dsa_problems: user can select own" on dsa_problems
-  for select using (auth.uid() = user_id);
-
-create policy "dsa_problems: user can insert own" on dsa_problems
-  for insert with check (auth.uid() = user_id);
-
-create policy "dsa_problems: user can update own" on dsa_problems
-  for update using (auth.uid() = user_id);
-
-create policy "dsa_problems: user can delete own" on dsa_problems
-  for delete using (auth.uid() = user_id);
-
--- ── goals ─────────────────────────────────────────────────
-create table if not exists goals (
-  id          uuid primary key default gen_random_uuid(),
-  user_id     uuid references auth.users(id) on delete cascade not null,
-  title       text not null,
-  description text not null default '',
-  progress    integer not null default 0 check (progress between 0 and 100),
-  deadline    text not null default 'No deadline',
-  category    text not null default 'General',
-  completed   boolean not null default false,
-  created_at  timestamptz not null default now()
-);
-
-alter table goals enable row level security;
-
-create policy "goals: user can select own" on goals
-  for select using (auth.uid() = user_id);
-
-create policy "goals: user can insert own" on goals
-  for insert with check (auth.uid() = user_id);
-
-create policy "goals: user can update own" on goals
-  for update using (auth.uid() = user_id);
-
-create policy "goals: user can delete own" on goals
-  for delete using (auth.uid() = user_id);
-
--- ============================================================
--- LeetCode Integration Migration
--- ============================================================
-
--- ── user_profiles (stores LeetCode username per user) ───────
-create table if not exists user_profiles (
-  user_id           uuid primary key references auth.users(id) on delete cascade,
-  leetcode_username  text not null default '',
-  last_synced_at    timestamptz,
-  updated_at        timestamptz not null default now()
-);
-
-alter table user_profiles enable row level security;
-
-create policy "user_profiles: user can select own" on user_profiles
-  for select using (auth.uid() = user_id);
-
-create policy "user_profiles: user can insert own" on user_profiles
-  for insert with check (auth.uid() = user_id);
-
-create policy "user_profiles: user can update own" on user_profiles
-  for update using (auth.uid() = user_id);
-
--- ── dsa_problems additions ──────────────────────────────────
---    source: 'manual' (added by user) or 'leetcode' (auto-synced)
---    leetcode_slug: unique problem identifier from LeetCode (e.g. "two-sum")
-alter table dsa_problems add column if not exists source text not null default 'manual';
-alter table dsa_problems add column if not exists leetcode_slug text default '';
+-- Add columns if upgrading from older schema (safe if already exist)
+ALTER TABLE dsa_problems ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'manual';
+ALTER TABLE dsa_problems ADD COLUMN IF NOT EXISTS leetcode_slug TEXT DEFAULT '';
 
 -- One entry per LeetCode problem per user (prevents duplicates on re-sync)
-create unique index if not exists idx_dsa_problems_user_leetcode_slug
-  on dsa_problems (user_id, leetcode_slug)
-  where leetcode_slug != '';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dsa_problems_user_leetcode_slug
+  ON dsa_problems (user_id, leetcode_slug)
+  WHERE leetcode_slug != '';
 
--- ── leetcode_problem_cache (avoids re-fetching difficulty/tags) ─
-create table if not exists leetcode_problem_cache (
-  title_slug   text primary key,
-  difficulty   text not null default 'Easy',
-  topic        text not null default '',
-  cached_at    timestamptz not null default now()
+DROP POLICY IF EXISTS "dsa_problems: user can select own" ON dsa_problems;
+CREATE POLICY "dsa_problems: user can select own" ON dsa_problems
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "dsa_problems: user can insert own" ON dsa_problems;
+CREATE POLICY "dsa_problems: user can insert own" ON dsa_problems
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "dsa_problems: user can update own" ON dsa_problems;
+CREATE POLICY "dsa_problems: user can update own" ON dsa_problems
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "dsa_problems: user can delete own" ON dsa_problems;
+CREATE POLICY "dsa_problems: user can delete own" ON dsa_problems
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- ── goals ─────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS goals (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  title       TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  progress    INTEGER NOT NULL DEFAULT 0 CHECK (progress BETWEEN 0 AND 100),
+  deadline    TEXT NOT NULL DEFAULT 'No deadline',
+  category    TEXT NOT NULL DEFAULT 'General',
+  completed   BOOLEAN NOT NULL DEFAULT false,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Public problem metadata — anyone can read, authenticated users can write
-alter table leetcode_problem_cache enable row level security;
+ALTER TABLE goals ENABLE ROW LEVEL SECURITY;
 
-create policy "leetcode_problem_cache: anyone can read" on leetcode_problem_cache
-  for select using (true);
+DROP POLICY IF EXISTS "goals: user can select own" ON goals;
+CREATE POLICY "goals: user can select own" ON goals
+  FOR SELECT USING (auth.uid() = user_id);
 
-create policy "leetcode_problem_cache: authenticated can insert" on leetcode_problem_cache
-  for insert with check (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "goals: user can insert own" ON goals;
+CREATE POLICY "goals: user can insert own" ON goals
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-create policy "leetcode_problem_cache: authenticated can update" on leetcode_problem_cache
-  for update using (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "goals: user can update own" ON goals;
+CREATE POLICY "goals: user can update own" ON goals
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "goals: user can delete own" ON goals;
+CREATE POLICY "goals: user can delete own" ON goals
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- ═══════════════════════════════════════════════════════════════
+-- PART 3: LeetCode Integration Tables
+-- ═══════════════════════════════════════════════════════════════
+
+-- ── user_profiles ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_profiles (
+  user_id            UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  leetcode_username  TEXT NOT NULL DEFAULT '',
+  leetcode_session   TEXT DEFAULT '',
+  last_synced_at     TIMESTAMPTZ,
+  updated_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Add columns if upgrading from older schema
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS leetcode_session TEXT DEFAULT '';
+
+-- Cron sync metadata columns
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS sync_status TEXT DEFAULT 'idle';
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS last_sync_error TEXT;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS last_sync_problems_found INTEGER DEFAULT 0;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS last_sync_problems_inserted INTEGER DEFAULT 0;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS cron_sync_enabled BOOLEAN DEFAULT TRUE;
+
+-- Add CHECK constraint for sync_status (idempotent)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'user_profiles_sync_status_check'
+      AND conrelid = 'user_profiles'::regclass
+  ) THEN
+    ALTER TABLE user_profiles
+      ADD CONSTRAINT user_profiles_sync_status_check
+      CHECK (sync_status IN ('idle', 'syncing', 'healthy', 'error', 'expired_session'));
+  END IF;
+END $$;
+
+DROP POLICY IF EXISTS "user_profiles: user can select own" ON user_profiles;
+CREATE POLICY "user_profiles: user can select own" ON user_profiles
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "user_profiles: user can insert own" ON user_profiles;
+CREATE POLICY "user_profiles: user can insert own" ON user_profiles
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "user_profiles: user can update own" ON user_profiles;
+CREATE POLICY "user_profiles: user can update own" ON user_profiles
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- ── leetcode_problem_cache ────────────────────────────────
+CREATE TABLE IF NOT EXISTS leetcode_problem_cache (
+  title_slug   TEXT PRIMARY KEY,
+  difficulty   TEXT NOT NULL DEFAULT 'Easy',
+  topic        TEXT NOT NULL DEFAULT '',
+  cached_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE leetcode_problem_cache ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "leetcode_problem_cache: anyone can read" ON leetcode_problem_cache;
+CREATE POLICY "leetcode_problem_cache: anyone can read" ON leetcode_problem_cache
+  FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "leetcode_problem_cache: authenticated can insert" ON leetcode_problem_cache;
+CREATE POLICY "leetcode_problem_cache: authenticated can insert" ON leetcode_problem_cache
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+DROP POLICY IF EXISTS "leetcode_problem_cache: authenticated can update" ON leetcode_problem_cache;
+CREATE POLICY "leetcode_problem_cache: authenticated can update" ON leetcode_problem_cache
+  FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+-- ═══════════════════════════════════════════════════════════════
+-- PART 4: Sync Logs (observability for cron auto-sync)
+-- ═══════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS sync_logs (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id           UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  started_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at      TIMESTAMPTZ,
+  status            TEXT NOT NULL DEFAULT 'running'
+                      CHECK (status IN ('running', 'success', 'error', 'skipped', 'expired_session')),
+  mode              TEXT CHECK (mode IN ('full', 'quick', 'incremental')),
+  problems_found    INTEGER DEFAULT 0,
+  problems_inserted INTEGER DEFAULT 0,
+  pages_scanned     INTEGER DEFAULT 0,
+  early_exit        BOOLEAN DEFAULT FALSE,
+  error_message     TEXT,
+  triggered_by      TEXT NOT NULL DEFAULT 'cron'
+                      CHECK (triggered_by IN ('cron', 'manual', 'initial'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_sync_logs_user_started
+  ON sync_logs(user_id, started_at DESC);
+
+ALTER TABLE sync_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "sync_logs: user can view own" ON sync_logs;
+CREATE POLICY "sync_logs: user can view own" ON sync_logs
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- ═══════════════════════════════════════════════════════════════
+-- PART 5: Enable Supabase Realtime (idempotent)
+-- ═══════════════════════════════════════════════════════════════
+
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE dsa_problems;
+EXCEPTION WHEN duplicate_object THEN
+  NULL; -- already added
+END $$;
+
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE user_profiles;
+EXCEPTION WHEN duplicate_object THEN
+  NULL; -- already added
+END $$;
+
+-- ═══════════════════════════════════════════════════════════════
+-- PART 6: Schedule Cron Jobs (idempotent)
+-- Reads URL, service_role_key, cron_secret from app_config table
+-- ═══════════════════════════════════════════════════════════════
+
+-- Remove existing jobs first (safe if they don't exist)
+DO $$
+BEGIN
+  PERFORM cron.unschedule('leetcode-cron-sync');
+EXCEPTION WHEN OTHERS THEN
+  NULL; -- job didn't exist
+END $$;
+
+DO $$
+BEGIN
+  PERFORM cron.unschedule('cleanup-old-sync-logs');
+EXCEPTION WHEN OTHERS THEN
+  NULL; -- job didn't exist
+END $$;
+
+-- Every 10 minutes: trigger batch sync Edge Function
+-- Reads secrets from app_config table at runtime
+SELECT cron.schedule(
+  'leetcode-cron-sync',
+  '*/10 * * * *',
+  $$
+  SELECT net.http_post(
+    url := (SELECT value FROM app_config WHERE key = 'supabase_url')
+           || '/functions/v1/leetcode-batch-sync',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer '
+           || (SELECT value FROM app_config WHERE key = 'service_role_key')
+    ),
+    body := jsonb_build_object(
+      'cronSecret', (SELECT value FROM app_config WHERE key = 'cron_secret'),
+      'triggeredBy', 'cron'
+    )
+  );
+  $$
+);
+
+-- Daily at 3:17 AM UTC: clean up sync logs older than 30 days
+SELECT cron.schedule(
+  'cleanup-old-sync-logs',
+  '17 3 * * *',
+  $$
+  DELETE FROM sync_logs WHERE started_at < NOW() - INTERVAL '30 days';
+  $$
+);
+
+-- ═══════════════════════════════════════════════════════════════
+-- DONE! Verify with:
+--   SELECT * FROM cron.job;
+--   SELECT * FROM app_config;
+-- ═══════════════════════════════════════════════════════════════

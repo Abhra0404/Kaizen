@@ -1,6 +1,7 @@
 import { User, Lock, Bell, Palette, LogOut, Sparkles, Camera, Trash2, Monitor, Clock, Shield, Code } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import * as leetcodeService from '@/services/leetcode';
+import { useSyncStatus } from '@/hooks/useSyncStatus';
 import type { LucideIcon } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -52,12 +53,18 @@ export default function Settings() {
 
   // LeetCode integration state
   const [leetcodeUsername, setLeetcodeUsername] = useState('');
+  const [leetcodeSession, setLeetcodeSession] = useState('');
   const [lcSaving, setLcSaving] = useState(false);
   const [lcSaved, setLcSaved] = useState(false);
+  const [lcDeleting, setLcDeleting] = useState(false);
+
+  // Sync status (cron-based auto-sync)
+  const { syncStatus, lastSyncedAt, lastSyncError, cronSyncEnabled, toggleCronSync } = useSyncStatus(user?.id);
 
   useEffect(() => {
     if (user) {
       leetcodeService.getLeetCodeUsername(user.id).then(setLeetcodeUsername);
+      leetcodeService.getLeetCodeSession(user.id).then(setLeetcodeSession);
     }
   }, [user]);
 
@@ -110,14 +117,31 @@ export default function Settings() {
     setLcSaving(true);
     try {
       await leetcodeService.saveLeetCodeUsername(user.id, leetcodeUsername);
+      await leetcodeService.saveLeetCodeSession(user.id, leetcodeSession);
       setLcSaved(true);
       setTimeout(() => setLcSaved(false), 2000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('LeetCode save error:', err);
-      alert(`Failed to save LeetCode username: ${msg}`);
+      alert(`Failed to save LeetCode settings: ${msg}`);
     }
     setLcSaving(false);
+  };
+
+  const handleDeleteLeetCodeData = async () => {
+    if (!user) return;
+    if (!window.confirm('This will delete ALL synced LeetCode problems and reset your username. This cannot be undone. Continue?')) return;
+    setLcDeleting(true);
+    try {
+      const deleted = await leetcodeService.deleteLeetCodeData(user.id);
+      setLeetcodeUsername('');
+      alert(`Deleted ${deleted} synced LeetCode problem${deleted === 1 ? '' : 's'} and reset your username.`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('LeetCode delete error:', err);
+      alert(`Failed to delete LeetCode data: ${msg}`);
+    }
+    setLcDeleting(false);
   };
 
   const [sections, setSections] = useState<Section[]>([]);
@@ -146,17 +170,6 @@ export default function Settings() {
         icon: Palette,
         items: [
           { label: 'Theme', value: currentTheme, select: true, options: [...THEME_OPTIONS] },
-        ],
-      },
-      {
-        title: 'Notifications',
-        icon: Bell,
-        blurred: true,
-        items: [
-          { label: 'Email Notifications', value: 'On', toggle: true },
-          { label: 'Daily Summary', value: 'Off', toggle: true },
-          { label: 'Streak Reminders', value: 'On', toggle: true },
-          { label: 'Goal Updates', value: 'On', toggle: true },
         ],
       },
     ]);
@@ -486,6 +499,162 @@ export default function Settings() {
           );
         })}
 
+        {/* Integrations – LeetCode */}
+        <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-dark-border transition-colors">
+          <div className="p-4 px-6 border-b border-gray-200 dark:border-dark-border flex items-center gap-3">
+            <Code size={20} className="text-gray-700 dark:text-dark-secondary" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-primary">Integrations</h3>
+          </div>
+          <div className="p-6 space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">
+                LeetCode Username
+              </label>
+              <input
+                type="text"
+                value={leetcodeUsername}
+                onChange={(e) => setLeetcodeUsername(e.target.value)}
+                placeholder="e.g. Abhra0404"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-dark-muted">
+                Your public LeetCode username. Required for syncing your solved problems.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">
+                LeetCode Session Cookie
+                <span className="ml-1 text-xs font-normal text-gray-400 dark:text-dark-muted">(required for Full Sync)</span>
+              </label>
+              <input
+                type="password"
+                value={leetcodeSession}
+                onChange={(e) => setLeetcodeSession(e.target.value)}
+                placeholder="Paste your LEETCODE_SESSION cookie value"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent font-mono text-xs"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-dark-muted">
+                Required for Full Sync (fetches all problems 20 at a time). Stored securely on our server, never in your browser.
+                <br />
+                To get it: LeetCode.com &rarr; DevTools (F12) &rarr; Application &rarr; Cookies &rarr; copy <code className="bg-gray-100 dark:bg-dark-input px-1 rounded">LEETCODE_SESSION</code> value.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSaveLeetCode}
+                disabled={lcSaving}
+                className="px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 disabled:opacity-50 transition-colors"
+              >
+                {lcSaved ? 'Saved' : 'Save'}
+              </button>
+              <button
+                onClick={handleDeleteLeetCodeData}
+                disabled={lcDeleting}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 transition-colors"
+              >
+                <Trash2 size={15} />
+                {lcDeleting ? 'Deleting...' : 'Delete All Data'}
+              </button>
+            </div>
+
+            {/* Auto-Sync Toggle & Status */}
+            <div className="pt-4 border-t border-gray-200 dark:border-dark-border space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-700 dark:text-dark-secondary">Auto-Sync</p>
+                  <p className="text-xs text-gray-500 dark:text-dark-muted">
+                    Automatically sync new LeetCode problems every 10 minutes
+                  </p>
+                </div>
+                <button
+                  onClick={() => toggleCronSync(!cronSyncEnabled)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full border-none cursor-pointer transition-colors ${
+                    cronSyncEnabled ? 'bg-green-500 dark:bg-green-600' : 'bg-gray-300 dark:bg-dark-accent'
+                  }`}
+                  aria-label="Toggle auto-sync"
+                >
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white transform transition-transform ${
+                    cronSyncEnabled ? 'translate-x-5' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+
+              {/* Sync Status Indicator */}
+              <div className="flex items-center gap-2 text-xs">
+                <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                  syncStatus === 'healthy' ? 'bg-green-500' :
+                  syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse' :
+                  syncStatus === 'error' ? 'bg-red-500' :
+                  syncStatus === 'expired_session' ? 'bg-orange-500' :
+                  'bg-gray-400'
+                }`} />
+                <span className="text-gray-600 dark:text-dark-muted font-medium">
+                  {syncStatus === 'healthy' ? 'Auto-sync active' :
+                   syncStatus === 'syncing' ? 'Syncing...' :
+                   syncStatus === 'error' ? 'Sync error' :
+                   syncStatus === 'expired_session' ? 'Session expired' :
+                   'Not synced'}
+                </span>
+                {lastSyncedAt && (
+                  <span className="text-gray-400 dark:text-gray-500">
+                    · Last synced: {new Date(lastSyncedAt).toLocaleString()}
+                  </span>
+                )}
+              </div>
+
+              {syncStatus === 'expired_session' && (
+                <p className="text-xs text-orange-600 dark:text-orange-400">
+                  Your LeetCode session cookie has expired. Get a fresh one from LeetCode and paste it above.
+                </p>
+              )}
+
+              {syncStatus === 'error' && lastSyncError && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  Last error: {lastSyncError}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Notifications – Coming Soon */}
+        <div className="relative rounded-xl overflow-hidden border border-gray-100 dark:border-dark-border shadow-sm">
+          <div className="bg-white dark:bg-dark-card p-4 px-6 border-b border-gray-200 dark:border-dark-border flex items-center gap-3">
+            <Bell size={20} className="text-gray-700 dark:text-dark-secondary" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-primary">Notifications</h3>
+          </div>
+          <div className="relative">
+            <div className="blur-sm pointer-events-none select-none">
+              <div className="bg-white dark:bg-dark-card p-6 flex flex-col gap-6">
+                {[
+                  { label: 'Email Notifications', value: 'On' },
+                  { label: 'Daily Summary', value: 'Off' },
+                  { label: 'Streak Reminders', value: 'On' },
+                  { label: 'Goal Updates', value: 'On' },
+                ].map((item, i, arr) => (
+                  <div key={i} className={`flex items-center justify-between pb-6 ${i === arr.length - 1 ? '' : 'border-b border-gray-100 dark:border-dark-border'}`}>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-dark-muted mb-1">{item.label}</p>
+                      <p className="text-sm text-gray-900 dark:text-dark-primary font-medium">{item.value}</p>
+                    </div>
+                    <div className={`relative inline-flex h-6 w-11 items-center rounded-full ${item.value === 'On' ? 'bg-green-500' : 'bg-gray-300'}`}>
+                      <span className={`inline-block h-4 w-4 rounded-full bg-white transform ${item.value === 'On' ? 'translate-x-5' : 'translate-x-1'}`}></span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/30 dark:bg-dark-surface/30 backdrop-blur-[2px]">
+              <div className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-2.5 rounded-full shadow-lg">
+                <Bell size={16} className="shrink-0" />
+                <span className="text-sm font-semibold tracking-wide">Coming Soon</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* AI Settings – Coming Soon */}
         <div className="relative rounded-xl overflow-hidden border border-gray-100 dark:border-dark-border shadow-sm">
           {/* Header – not blurred */}
@@ -542,38 +711,6 @@ export default function Settings() {
                 <span className="text-sm font-semibold tracking-wide">Coming Soon</span>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Integrations – LeetCode */}
-        <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-dark-border transition-colors">
-          <div className="p-4 px-6 border-b border-gray-200 dark:border-dark-border flex items-center gap-3">
-            <Code size={20} className="text-gray-700 dark:text-dark-secondary" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-primary">Integrations</h3>
-          </div>
-          <div className="p-6">
-            <label className="block text-sm font-medium text-gray-700 dark:text-dark-secondary mb-2">
-              LeetCode Username
-            </label>
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={leetcodeUsername}
-                onChange={(e) => setLeetcodeUsername(e.target.value)}
-                placeholder="e.g. uwi"
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-input text-gray-900 dark:text-dark-primary focus:ring-2 focus:ring-gray-400 focus:border-transparent"
-              />
-              <button
-                onClick={handleSaveLeetCode}
-                disabled={lcSaving}
-                className="px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 disabled:opacity-50 transition-colors"
-              >
-                {lcSaved ? 'Saved' : 'Save'}
-              </button>
-            </div>
-            <p className="mt-2 text-xs text-gray-500 dark:text-dark-muted">
-              Your public LeetCode username. Go to DSA page and click "Sync LeetCode" to import your solved problems.
-            </p>
           </div>
         </div>
 

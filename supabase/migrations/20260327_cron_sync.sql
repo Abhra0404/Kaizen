@@ -1,0 +1,9 @@
+-- =============================================================
+-- Migration: Cron-based auto-sync infrastructure for LeetCode
+-- =============================================================
+-- This migration is now merged into the main schema.sql file.
+-- Run schema.sql instead — it contains everything (tables, policies,
+-- extensions, cron jobs) in a single idempotent script.
+--
+-- This file is kept for reference only.
+-- =============================================================

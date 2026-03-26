@@ -49,10 +49,3 @@ export type Goal = {
   category: string;
   completed: boolean;
 };
-
-// ── Overview (partial types for dashboard aggregations) ──
-
-export type PartialProblem = Pick<Problem, 'solved' | 'date'>;
-export type PartialHabit = Pick<Habit, 'streak'>;
-export type PartialGoal = Pick<Goal, 'completed'>;
-export type PartialProject = Pick<Project, 'name' | 'status' | 'progress'>;

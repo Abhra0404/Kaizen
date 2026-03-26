@@ -23,7 +23,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const GITHUB_URL = 'https://github.com/abhra-zero/Kaizen';
+const GITHUB_URL = 'https://github.com/Abhra0404/Kaizen';
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */
@@ -144,79 +144,92 @@ export default function Landing() {
       {/* -------- Global grid background -------- */}
       <div className="fixed inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.04] pointer-events-none z-0" aria-hidden="true" />
 
-      {/* -------- Navbar -------- */}
+      {/* -------- Pill Navbar -------- */}
       <nav
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          scrolled || mobileMenuOpen
-            ? 'bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md border-b border-gray-200 dark:border-dark-border shadow-sm'
-            : 'bg-transparent'
-        }`}
+        className="fixed top-0 w-full z-50 flex justify-center px-4 pt-4 pointer-events-none"
         role="navigation"
         aria-label="Main navigation"
       >
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 group" aria-label="Kaizen — Home">
-            <div className="w-9 h-9 rounded-lg bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 group-hover:shadow-md transition-shadow">
-              <Zap size={20} className="fill-current" />
+        <div
+          className={`pointer-events-auto flex items-center justify-between gap-4 px-5 py-3 rounded-2xl border transition-all duration-500 ${
+            scrolled || mobileMenuOpen
+              ? 'bg-white/40 dark:bg-dark-bg/40 backdrop-blur-xl border-gray-200/40 dark:border-dark-border/40 shadow-lg shadow-gray-900/5 dark:shadow-black/20'
+              : 'bg-white/20 dark:bg-dark-bg/20 backdrop-blur-lg border-gray-200/30 dark:border-dark-border/30'
+          } w-full max-w-3xl`}
+        >
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 group flex-shrink-0" aria-label="Kaizen — Home">
+            <div className="w-8 h-8 rounded-lg bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 group-hover:shadow-md transition-shadow">
+              <Zap size={16} className="fill-current" />
             </div>
-            <span className="text-lg font-bold tracking-tight group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
+            <span className="text-sm font-bold tracking-tight group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
               Kaizen
             </span>
           </Link>
 
-          <div className="flex items-center gap-3">
-            {/* Desktop nav links */}
+          {/* Desktop actions */}
+          <div className="hidden sm:flex items-center gap-2">
             <Link
               to="/login"
-              className="hidden sm:inline-block text-sm font-medium px-4 py-2 border border-gray-300 dark:border-dark-border text-gray-700 dark:text-dark-secondary hover:text-gray-900 dark:hover:text-dark-primary hover:bg-gray-100 dark:hover:bg-dark-hover rounded-lg transition-all duration-200"
+              className="text-sm font-medium px-4 py-1.5 text-gray-600 dark:text-dark-secondary hover:text-gray-900 dark:hover:text-dark-primary transition-colors rounded-full"
             >
               Log In
             </Link>
             <Link
               to="/signup"
-              className="hidden sm:inline-block text-sm font-medium px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm"
+              className="text-sm font-medium px-4 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
             >
               Register
             </Link>
-
-            {/* Dark mode toggle */}
             <button
               onClick={toggleDark}
               onKeyDown={handleToggleKey}
-              className="p-2 text-gray-600 dark:text-dark-muted border border-gray-200 dark:border-dark-border hover:bg-gray-100 dark:hover:bg-dark-hover rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-gray-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 dark:focus-visible:ring-offset-dark-bg"
+              className="p-1.5 text-gray-500 dark:text-dark-muted hover:text-gray-900 dark:hover:text-dark-primary rounded-full hover:bg-gray-100 dark:hover:bg-dark-hover transition-all duration-200 focus-visible:ring-2 focus-visible:ring-gray-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 dark:focus-visible:ring-offset-dark-bg"
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               role="switch"
               aria-checked={isDark}
             >
-              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
+          </div>
 
-            {/* Mobile hamburger */}
+          {/* Mobile actions */}
+          <div className="flex sm:hidden items-center gap-1.5">
+            <button
+              onClick={toggleDark}
+              onKeyDown={handleToggleKey}
+              className="p-1.5 text-gray-500 dark:text-dark-muted hover:text-gray-900 dark:hover:text-dark-primary rounded-full hover:bg-gray-100 dark:hover:bg-dark-hover transition-all duration-200"
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              role="switch"
+              aria-checked={isDark}
+            >
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             <button
               onClick={() => setMobileMenuOpen((o) => !o)}
-              className="sm:hidden p-2 text-gray-600 dark:text-dark-muted border border-gray-200 dark:border-dark-border hover:bg-gray-100 dark:hover:bg-dark-hover rounded-lg transition-all duration-200"
+              className="p-1.5 text-gray-500 dark:text-dark-muted hover:text-gray-900 dark:hover:text-dark-primary rounded-full hover:bg-gray-100 dark:hover:bg-dark-hover transition-all duration-200"
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+              {mobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile dropdown */}
+        {/* Mobile dropdown — pill-shaped too */}
         {mobileMenuOpen && (
-          <div className="sm:hidden border-t border-gray-200 dark:border-dark-border bg-white/95 dark:bg-dark-bg/95 backdrop-blur-md px-6 py-4 space-y-2">
+          <div className="pointer-events-auto sm:hidden absolute top-full mt-2 left-4 right-4 max-w-xl mx-auto rounded-2xl border border-gray-200/40 dark:border-dark-border/40 bg-white/30 dark:bg-dark-bg/30 backdrop-blur-xl shadow-lg shadow-gray-900/5 dark:shadow-black/20 px-4 py-3 space-y-2">
             <Link
               to="/login"
               onClick={() => setMobileMenuOpen(false)}
-              className="block w-full text-center text-sm font-medium px-4 py-3 border border-gray-300 dark:border-dark-border text-gray-700 dark:text-dark-secondary hover:bg-gray-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
+              className="block w-full text-center text-sm font-medium px-4 py-2.5 text-gray-700 dark:text-dark-secondary hover:bg-gray-100 dark:hover:bg-dark-hover rounded-full transition-colors"
             >
               Log In
             </Link>
             <Link
               to="/signup"
               onClick={() => setMobileMenuOpen(false)}
-              className="block w-full text-center text-sm font-medium px-4 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+              className="block w-full text-center text-sm font-medium px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
             >
               Register
             </Link>
@@ -240,6 +253,51 @@ export default function Landing() {
           <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-gradient-to-r from-gray-300 to-gray-200 dark:from-dark-input dark:to-dark-card rounded-full blur-3xl opacity-20 animate-float-delayed" />
         </div>
 
+        {/* Floating stationary items — desktop only */}
+        <div className="hidden lg:block absolute inset-0 pointer-events-none" aria-hidden="true">
+          {/* Top-left — Code icon */}
+          <div className="absolute top-[18%] left-[8%] animate-float-slow" style={{ animationDelay: '0s' }}>
+            <div className="w-12 h-12 rounded-xl border border-gray-200/60 dark:border-dark-border/60 bg-white/70 dark:bg-dark-card/70 backdrop-blur-sm shadow-lg shadow-gray-900/5 dark:shadow-black/10 flex items-center justify-center">
+              <Code size={20} className="text-gray-400 dark:text-dark-muted" />
+            </div>
+          </div>
+
+          {/* Top-right — Target icon */}
+          <div className="absolute top-[22%] right-[10%] animate-float-diagonal" style={{ animationDelay: '1.5s' }}>
+            <div className="w-11 h-11 rounded-xl border border-gray-200/60 dark:border-dark-border/60 bg-white/70 dark:bg-dark-card/70 backdrop-blur-sm shadow-lg shadow-gray-900/5 dark:shadow-black/10 flex items-center justify-center">
+              <Target size={18} className="text-gray-400 dark:text-dark-muted" />
+            </div>
+          </div>
+
+          {/* Mid-left — CheckCircle icon */}
+          <div className="absolute top-[55%] left-[5%] animate-float-gentle" style={{ animationDelay: '3s' }}>
+            <div className="w-10 h-10 rounded-xl border border-gray-200/60 dark:border-dark-border/60 bg-white/70 dark:bg-dark-card/70 backdrop-blur-sm shadow-lg shadow-gray-900/5 dark:shadow-black/10 flex items-center justify-center">
+              <CheckCircle2 size={16} className="text-gray-400 dark:text-dark-muted" />
+            </div>
+          </div>
+
+          {/* Mid-right — Kanban icon */}
+          <div className="absolute top-[50%] right-[6%] animate-float-slow" style={{ animationDelay: '2s' }}>
+            <div className="w-12 h-12 rounded-xl border border-gray-200/60 dark:border-dark-border/60 bg-white/70 dark:bg-dark-card/70 backdrop-blur-sm shadow-lg shadow-gray-900/5 dark:shadow-black/10 flex items-center justify-center">
+              <Kanban size={20} className="text-gray-400 dark:text-dark-muted" />
+            </div>
+          </div>
+
+          {/* Bottom-left — TrendingUp icon */}
+          <div className="absolute top-[75%] left-[12%] animate-float-diagonal" style={{ animationDelay: '4s' }}>
+            <div className="w-10 h-10 rounded-xl border border-gray-200/60 dark:border-dark-border/60 bg-white/70 dark:bg-dark-card/70 backdrop-blur-sm shadow-lg shadow-gray-900/5 dark:shadow-black/10 flex items-center justify-center">
+              <TrendingUp size={16} className="text-gray-400 dark:text-dark-muted" />
+            </div>
+          </div>
+
+          {/* Bottom-right — Zap icon */}
+          <div className="absolute top-[78%] right-[11%] animate-float-gentle" style={{ animationDelay: '1s' }}>
+            <div className="w-11 h-11 rounded-xl border border-gray-200/60 dark:border-dark-border/60 bg-white/70 dark:bg-dark-card/70 backdrop-blur-sm shadow-lg shadow-gray-900/5 dark:shadow-black/10 flex items-center justify-center">
+              <Zap size={18} className="text-gray-400 dark:text-dark-muted" />
+            </div>
+          </div>
+        </div>
+
         <div className="max-w-5xl mx-auto relative z-10 pt-32 pb-20 md:pt-44 md:pb-32 lg:pt-48 lg:pb-36 px-6">
           <div className="flex flex-col items-center text-center gap-8 md:gap-10">
             {/* Badge */}
@@ -258,18 +316,18 @@ export default function Landing() {
               className="text-[2.75rem] leading-[1.1] sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight"
             >
               <span
-                className={`block heading-shine transition-all duration-1000 ease-out ${
+                className={`block transition-all duration-1000 ease-out ${
                   heroReady ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6'
                 }`}
               >
-                Build better habits.
+                <span className="heading-shine">Build better habits.</span>
               </span>
               <span
-                className={`block mt-1 md:mt-2 heading-shine transition-all duration-1000 delay-200 ease-out ${
+                className={`block mt-1 md:mt-2 transition-all duration-1000 delay-200 ease-out ${
                   heroReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
                 }`}
               >
-                Track real progress.
+                <span className="heading-shine">Track real progress.</span>
               </span>
             </h1>
 

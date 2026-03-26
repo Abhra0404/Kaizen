@@ -35,6 +35,21 @@ html.dark body {
 	0%, 100% { transform: translateY(0) translateX(0); }
 	50% { transform: translateY(-20px) translateX(10px); }
 }
+@keyframes float-slow {
+	0%, 100% { transform: translateY(0) rotate(0deg); }
+	33% { transform: translateY(-12px) rotate(2deg); }
+	66% { transform: translateY(6px) rotate(-1deg); }
+}
+@keyframes float-diagonal {
+	0%, 100% { transform: translate(0, 0) rotate(0deg); }
+	50% { transform: translate(8px, -14px) rotate(3deg); }
+}
+@keyframes float-gentle {
+	0%, 100% { transform: translate(0, 0); }
+	25% { transform: translate(-6px, -10px); }
+	50% { transform: translate(4px, -16px); }
+	75% { transform: translate(10px, -6px); }
+}
 @keyframes marquee {
 	0% { transform: translateX(0); }
 	100% { transform: translateX(-50%); }
@@ -49,6 +64,15 @@ html.dark body {
 }
 .animate-float-delayed {
 	animation: float 8s ease-in-out infinite 4s;
+}
+.animate-float-slow {
+	animation: float-slow 10s ease-in-out infinite;
+}
+.animate-float-diagonal {
+	animation: float-diagonal 7s ease-in-out infinite;
+}
+.animate-float-gentle {
+	animation: float-gentle 12s ease-in-out infinite;
 }
 
 /* Infinite marquee — pauses on hover */
@@ -70,38 +94,59 @@ html.dark body {
 	animation: fade-in-up 0.7s ease-out forwards;
 }
 
-/* Heading text shine — gradient clipped to text, dark mode only */
+/* Heading text shine — gradient clipped to text */
 @keyframes text-shine {
 	0%   { background-position: 200% center; }
 	100% { background-position: -200% center; }
+}
+.heading-shine {
+	display: inline-block;
+	background: linear-gradient(
+		120deg,
+		#111827 0%,
+		#111827 35%,
+		#6b7280 48%,
+		#9ca3af 50%,
+		#6b7280 52%,
+		#111827 65%,
+		#111827 100%
+	);
+	background-size: 300% 100%;
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: text-shine 6s linear infinite;
 }
 html.dark .heading-shine {
 	background: linear-gradient(
 		120deg,
 		#E0E0E0 0%,
-		#E0E0E0 30%,
+		#E0E0E0 35%,
 		#ffffff 48%,
 		#ffffff 52%,
-		#E0E0E0 70%,
+		#E0E0E0 65%,
 		#E0E0E0 100%
 	);
 	background-size: 300% 100%;
 	-webkit-background-clip: text;
 	background-clip: text;
 	-webkit-text-fill-color: transparent;
-	animation: text-shine 4s linear infinite;
+	animation: text-shine 6s linear infinite;
 }
 
 /* ---- Accessibility: respect reduced-motion preference ---- */
 @media (prefers-reduced-motion: reduce) {
 	.animate-float,
-	.animate-float-delayed {
+	.animate-float-delayed,
+	.animate-float-slow,
+	.animate-float-diagonal,
+	.animate-float-gentle {
 		animation: none;
 	}
 	.marquee-track {
 		animation: none;
 	}
-	html.dark .heading-shine {
+	.heading-shine {
 		animation: none;
 	}
 	.reveal {

@@ -7,7 +7,7 @@ export async function fetchProblems(userId: string): Promise<Problem[]> {
     .from(TABLES.DSA_PROBLEMS)
     .select(SELECT_COLUMNS.DSA_PROBLEMS)
     .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .order('date', { ascending: false });
   if (error) throw error;
   return (data as Problem[]) ?? [];
 }

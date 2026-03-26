@@ -11,34 +11,37 @@ import { Bar } from 'react-chartjs-2';
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 type ChartPoint = { day: string; value: number };
+type TimeRange = '7d' | '30d' | 'all';
 
 type ChartCardProps = {
   title?: string;
   subtitle?: string;
   points?: ChartPoint[];
   totalLabel?: string;
+  timeRange?: TimeRange;
+  onTimeRangeChange?: (range: TimeRange) => void;
+};
+
+const RANGE_LABELS: Record<TimeRange, string> = {
+  '7d': '7 days',
+  '30d': '30 days',
+  'all': 'All time',
 };
 
 export default function ChartCard({
-  title = 'Weekly Activity',
+  title = 'DSA Activity',
   subtitle = 'Problems solved over time',
-  points = [
-    { day: 'Mon', value: 65 },
-    { day: 'Tue', value: 78 },
-    { day: 'Wed', value: 45 },
-    { day: 'Thu', value: 88 },
-    { day: 'Fri', value: 92 },
-    { day: 'Sat', value: 58 },
-    { day: 'Sun', value: 72 },
-  ],
-  totalLabel = 'Total: 498 problems',
+  points = [],
+  totalLabel = '',
+  timeRange = '7d',
+  onTimeRangeChange,
 }: ChartCardProps) {
   const isDark = document.documentElement.classList.contains('dark');
   const tickColor = isDark ? '#888888' : '#6b7280';
   const gridColor = isDark ? 'rgba(68,68,68,0.4)' : 'rgba(107,114,128,0.15)';
 
   const chartData = {
-    labels: points.map(d => d.day),
+    labels: points.map(d => d.day.includes('\n') ? d.day.split('\n') : d.day),
     datasets: [
       {
         label: 'Problems',
@@ -67,6 +70,11 @@ export default function ChartCard({
         grid: { display: false },
         ticks: {
           color: tickColor,
+          maxRotation: points.length > 14 ? 90 : 0,
+          autoSkip: false,
+          font: {
+            size: points.length > 14 ? 9 : 11,
+          },
         },
       },
       y: {
@@ -81,13 +89,38 @@ export default function ChartCard({
 
   return (
     <div className="bg-white dark:bg-dark-card rounded-xl p-6 border border-gray-200 dark:border-dark-border hover:border-gray-300 dark:hover:border-dark-accent transition-all duration-300">
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-primary">{title}</h3>
-        <p className="text-sm text-gray-500 dark:text-dark-muted mt-1">{subtitle}</p>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-primary">{title}</h3>
+          <p className="text-sm text-gray-500 dark:text-dark-muted mt-1">{subtitle}</p>
+        </div>
+        {onTimeRangeChange && (
+          <div className="flex items-center gap-1 bg-gray-100 dark:bg-dark-input rounded-lg p-0.5">
+            {(['7d', '30d', 'all'] as const).map((range) => (
+              <button
+                key={range}
+                onClick={() => onTimeRangeChange(range)}
+                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors border-none cursor-pointer ${
+                  timeRange === range
+                    ? 'bg-white dark:bg-dark-card text-gray-900 dark:text-dark-primary shadow-sm'
+                    : 'bg-transparent text-gray-500 dark:text-dark-muted hover:text-gray-700 dark:hover:text-dark-secondary'
+                }`}
+              >
+                {RANGE_LABELS[range]}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="h-72">
-        <Bar data={chartData} options={options} />
+        {points.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-sm text-gray-500 dark:text-dark-muted">No data for this period</p>
+          </div>
+        ) : (
+          <Bar data={chartData} options={options} />
+        )}
       </div>
 
       <div className="mt-4 pt-4 border-t border-gray-100 dark:border-dark-border flex items-center justify-between">

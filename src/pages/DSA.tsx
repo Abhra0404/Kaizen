@@ -1,6 +1,7 @@
 import { Plus, Trash2, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { useProblems } from '@/hooks/useProblems';
+import { useAuth } from '@/contexts/AuthContext';
 import { DIFFICULTIES, DIFFICULTY_STYLES } from '@/constants';
 import type { Difficulty } from '@/types';
 import Spinner from '@/components/ui/Spinner';
@@ -9,8 +10,10 @@ import StatCard from '@/components/ui/StatCard';
 import Modal from '@/components/ui/Modal';
 import ErrorBanner from '@/components/ui/ErrorBanner';
 import EmptyState from '@/components/ui/EmptyState';
+import SyncStatusBadge from '@/components/SyncStatusBadge';
 
 export default function DSA() {
+  const { user } = useAuth();
   const {
     problems, loading, error, clearError,
     addProblem, toggleSolved, removeProblem,
@@ -72,15 +75,26 @@ export default function DSA() {
           <div>
             <p className="text-sm text-gray-500 dark:text-dark-muted uppercase tracking-wide">Activity</p>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-dark-primary">Recent Problems</h2>
+            <SyncStatusBadge userId={user?.id} />
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={syncFromLeetCode}
+              onClick={() => syncFromLeetCode(false)}
               disabled={syncing}
               className="flex items-center gap-2 px-4 py-2 text-sm bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-lg border border-amber-500 cursor-pointer transition-colors"
+              title="Syncs your 20 most recent solved problems (no cookie needed)"
             >
               <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
-              {syncing ? 'Syncing...' : 'Sync LeetCode'}
+              {syncing ? 'Syncing...' : 'Quick Sync'}
+            </button>
+            <button
+              onClick={() => syncFromLeetCode(true)}
+              disabled={syncing}
+              className="flex items-center gap-2 px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded-lg border border-amber-600 cursor-pointer transition-colors"
+              title="Syncs ALL solved problems 20 at a time (requires session cookie in Settings)"
+            >
+              <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
+              {syncing ? 'Syncing...' : 'Full Sync'}
             </button>
             <button
               onClick={() => setIsModalOpen(true)}
