@@ -28,9 +28,7 @@ A productivity and continuous improvement tracker for habits, DSA problems, proj
 - [Getting Started](#getting-started)
 - [Project Structure](#project-structure)
 - [Database Schema](#database-schema)
-- [Dark Mode](#dark-mode)
-- [Deployment](#deployment)
-- [Roadmap](#roadmap)
+- [LeetCode Integration](#leetcode-integration)
 
 ---
 
