@@ -358,6 +358,26 @@ SELECT cron.schedule(
   $$
 );
 
+-- Every 10 minutes: ping to keep Supabase from pausing (free tier inactivity prevention)
+SELECT cron.schedule(
+  'supabase-ping',
+  '*/10 * * * *',
+  $$
+  SELECT net.http_post(
+    url := (SELECT value FROM app_config WHERE key = 'supabase_url')
+           || '/functions/v1/ping',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer '
+           || (SELECT value FROM app_config WHERE key = 'service_role_key')
+    ),
+    body := jsonb_build_object(
+      'timestamp', NOW()
+    )
+  );
+  $$
+);
+
 -- ═══════════════════════════════════════════════════════════════
 -- DONE! Verify with:
 --   SELECT * FROM cron.job;

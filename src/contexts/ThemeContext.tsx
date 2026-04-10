@@ -20,7 +20,7 @@ function resolveTheme(): ThemeOption {
   const stored = localStorage.getItem('theme');
   if (stored === 'dark') return 'Dark';
   if (stored === 'light') return 'Light';
-  return 'System';
+  return 'Light';
 }
 
 function applyDark(isDark: boolean) {

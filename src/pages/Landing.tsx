@@ -413,7 +413,7 @@ export default function Landing() {
       </section>
 
       {/* -------- Features -------- */}
-      <section className="relative z-10 py-24 px-6 bg-gray-50/80 dark:bg-dark-surface/80 backdrop-blur-sm border-y border-gray-200 dark:border-dark-border" aria-labelledby="features-heading">
+      <section className="relative z-10 py-24 px-6" aria-labelledby="features-heading">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16 space-y-4 reveal">
             <h2 id="features-heading" className="text-3xl md:text-4xl font-bold">
@@ -622,6 +622,7 @@ function HowItWorksCard({ number, title, description }: HowItWorksCardProps) {
 /** Dashboard screenshot with a graceful fallback when the image doesn't exist yet */
 function DashboardPreview() {
   const [imgError, setImgError] = useState(false);
+  const { isDark } = useTheme();
 
   if (imgError) {
     return (
@@ -637,7 +638,7 @@ function DashboardPreview() {
 
   return (
     <img
-      src="/dashboard-preview.png"
+      src={isDark ? '/dashboard-preview-dark.png' : '/dashboard-preview.png'}
       alt="Kaizen dashboard showing stat cards, weekly activity chart, project progress, and habit streaks"
       className="w-full h-auto block"
       loading="lazy"
